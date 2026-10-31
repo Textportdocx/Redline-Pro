@@ -1,0 +1,30 @@
+(async()=>{ const sleep=t=>new Promise(r=>setTimeout(r,t)); const log=[];
+ const mk=(b,n)=>{const bin=atob(b);const u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);return new File([u],n,{type:'application/pdf'})};
+ const vp=document.getElementById('vp'); vp.setPointerCapture=()=>{}; PREF.scanMax=12;
+ await loadFile('A',mk('__MA__','A.pdf')); await loadFile('B',mk('__MB__','B.pdf')); await sleep(500);
+ const counts=()=>[1,2,3].map(n=>(S.scan[n]||[]).length).join('/');
+ log.push('diffs per page before: '+counts());
+ await show(2); await sleep(300);
+ const cl=(ix,iy)=>{ const r=vp.getBoundingClientRect(), sc=S.cur.dpi/72; return [r.left+S.view.x+ix*sc*S.view.k, r.top+S.view.y+iy*sc*S.view.k]; };
+ const ev=(type,pt,extra={})=>vp.dispatchEvent(new PointerEvent(type,{clientX:pt[0],clientY:pt[1],button:0,pointerId:1,bubbles:true,...extra}));
+ document.getElementById('ignBtn').click();
+ ev('pointerdown',cl(30,120)); ev('pointermove',cl(180,135)); ev('pointermove',cl(340,146)); ev('pointerup',cl(340,146)); await sleep(9000);
+ log.push('ignore areas '+S.ignore.length+' sel '+!!S.igSel+' still on page '+S.n+' diffs: '+counts());
+ const g=S.ignore[0], w0=g.w, x0=g.x;
+ ev('pointerdown',cl(g.x+g.w,g.y+g.h)); ev('pointermove',cl(g.x+g.w+40,g.y+g.h+10)); ev('pointerup',cl(g.x+g.w+40,g.y+g.h+10)); await sleep(500);
+ log.push('resized wider by '+Math.round(g.w-w0)+' pt');
+ ev('pointerdown',cl(g.x+20,g.y+5)); ev('pointermove',cl(g.x+50,g.y+5)); ev('pointerup',cl(g.x+50,g.y+5)); await sleep(500);
+ log.push('moved by '+Math.round(g.x-x0)+' pt');
+ document.getElementById('ignBtn').click();
+ const mid=cl(g.x+g.w/2,g.y+g.h/2); vp.dispatchEvent(new MouseEvent('contextmenu',{clientX:mid[0],clientY:mid[1],bubbles:true,cancelable:true})); await sleep(200);
+ const items=[...document.querySelectorAll('#ctxmenu .mi')].map(b=>b.textContent.trim().slice(0,28)); log.push('context menu: '+items.join(' | '));
+ document.querySelector('#ctxmenu .mi').click(); await sleep(9000);
+ log.push('after delete: areas '+S.ignore.length+' page '+S.n+' diffs: '+counts());
+ // keyboard delete + shortcuts
+ document.getElementById('ignBtn').click(); ev('pointerdown',cl(30,120)); ev('pointermove',cl(340,146)); ev('pointerup',cl(340,146)); document.getElementById('ignBtn').click(); await sleep(300);
+ document.dispatchEvent(new KeyboardEvent('keydown',{key:'Delete',bubbles:true})); await sleep(200); log.push('Delete key removed area: '+(S.ignore.length===0));
+ const key=(k,o={})=>document.dispatchEvent(new KeyboardEvent('keydown',{key:k,bubbles:true,...o}));
+ key('3'); log.push('key 3 mode='+document.getElementById('mode').value); key('5'); key('1'); log.push('key 1 mode='+document.getElementById('mode').value);
+ key('PageDown'); await sleep(2500); log.push('PageDown -> page '+S.n);
+ key('2',{ctrlKey:true}); log.push('ctrl+2 view='+document.body.dataset.view); key('t'); log.push('t tool='+RE.E.E?.tool);
+ return log; })()

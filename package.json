@@ -1,0 +1,64 @@
+{
+  "name": "redline-pro",
+  "version": "1.0.0",
+  "description": "Redline Pro: compare circuit drawings and edit PDFs. Redline Studio - textportdocx.in.",
+  "author": "Redline Studio",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dist:dir": "electron-builder --win dir --x64",
+    "dist:portable": "electron-builder --win portable --prepackaged dist/win-unpacked --x64",
+    "patch:exe": "node patch_exe.js \"dist/win-unpacked/Redline Pro.exe\" build/icon.ico",
+    "dist:setup": "makensis -DSRC=dist/win-unpacked -DICON=build/icon.ico -DLIC=LICENSE.txt -DOUT=dist/RedlinePro-Setup-1.0.0.exe installer.nsi",
+    "dist:all": "npm run dist:dir && npm run patch:exe && npm run dist:portable && npm run dist:setup"
+  },
+  "devDependencies": {
+    "electron": "^45.1.0",
+    "electron-builder": "^26.18.0",
+    "resedit": "^2.0.0"
+  },
+  "build": {
+    "appId": "in.textportdocx.redlinepro",
+    "productName": "Redline Pro",
+    "copyright": "Redline Studio - textportdocx.in",
+    "files": [
+      "main.js",
+      "preload.js",
+      "index.html",
+      "icons.js",
+      "pre.js",
+      "extras.js",
+      "pro.js",
+      "LICENSE.txt",
+      "build/logo.png",
+      "app.js",
+      "editor.js",
+      "menu.js",
+      "style.css",
+      "lib/**",
+      "build/icon.png",
+      "dxf_engine.js",
+      "cam_engine.js",
+      "measure_engine.js",
+      "worker_engine.js",
+      "worker.js",
+      "ui_ribbon.js"
+    ],
+    "win": {
+      "target": [
+        "dir",
+        "portable"
+      ],
+      "icon": "build/icon.ico",
+      "signAndEditExecutable": false
+    },
+    "portable": {
+      "artifactName": "RedlinePro-Portable-1.0.0.exe"
+    },
+    "compression": "normal"
+  },
+  "dependencies": {
+    "pdf-lib": "1.17.1",
+    "pdfjs-dist": "^6.4.299"
+  }
+}

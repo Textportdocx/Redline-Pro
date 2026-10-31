@@ -1,0 +1,6 @@
+node_modules/
+dist/
+out_pkg/
+tests/run/
+tests/pdfs/
+test_out/

@@ -1,0 +1,12 @@
+REDLINE PRO - FREE SIGNING GUIDE (0 dollars)
+
+1. Put sign_app.bat, Sign-RedlinePro.ps1 and both RedlinePro-*.exe files in one folder on Windows.
+2. Double-click sign_app.bat. First time it makes a "Redline Studio" certificate and asks for a backup password.
+3. Both exe files are now signed (Properties > Digital Signatures shows "Redline Studio").
+4. SHA256SUMS.txt is created - put it on textportdocx.in next to the download.
+5. Upload each exe to https://www.microsoft.com/en-us/wdsi/filesubmission so SmartScreen learns it is safe.
+6. Also scan on virustotal.com and link the clean result on your site.
+
+Note: a free self-made certificate still shows "Unknown publisher" on other people's PCs until
+SmartScreen reputation builds. Fully trusted signing needs a paid certificate or SignPath (free for open source).
+Keep RedlineStudio-CodeSign.pfx private and reuse it for every future version.

@@ -1,0 +1,175 @@
+REDLINE PRO - END-USER LICENSE AGREEMENT (EULA)
+Version 1.0  |  Publisher: Redline Studio  |  Website: textportdocx.in
+
+PLEASE READ THIS AGREEMENT BEFORE INSTALLING OR USING REDLINE PRO.
+By clicking "I Agree", installing, copying or using Redline Pro (the
+"Software"), you agree to this End-User License Agreement ("Agreement").
+If you do not agree, do not install or use the Software and delete any copy
+in your possession. If you use the Software on behalf of an organization,
+you confirm that you are authorized to accept this Agreement for it; "you"
+then includes that organization.
+
+1. DEFINITIONS
+"Publisher", "we" or "us" means Redline Studio. "Output" means reports,
+markups, comparisons, exports or other materials you create using the
+Software. "Third-Party Components" means software distributed with or used
+by the Software that is subject to a separate license.
+
+2. LICENSE GRANT AND COST
+Subject to this Agreement, the Publisher grants you a free, non-exclusive,
+worldwide, perpetual license to install and use the Software on computers
+you own or control, for personal, educational and commercial work. There
+are no license fees, subscriptions or account requirements for the license
+granted here. This license is for use of the Software and does not transfer
+ownership of the Software or its intellectual property to you.
+
+3. PERMITTED USE AND YOUR OUTPUT
+ a) You may use the Software to view, compare, annotate, edit, convert and
+    review PDF documents, drawings, schematics and related files.
+ b) You may use, share, publish and sell your Output. As between you and the
+    Publisher, you retain your rights in your Output. The Software does not
+    give you rights to third-party material in your source files or Output.
+ c) You may share an unmodified official installer or portable copy without
+    charge, provided that you include this Agreement and do not suggest that
+    the copy is an official download or endorsed by the Publisher.
+
+4. RESTRICTIONS
+You must not, and must not help another person to:
+ a) sell, rent, lease, sublicense or charge for access to the Software itself;
+ b) remove, obscure or alter the Software's name, branding, copyright or
+    other proprietary notices, or this Agreement;
+ c) modify, adapt or redistribute the Software as an official Redline Pro
+    release, or misrepresent the source or authenticity of a copy;
+ d) reverse engineer, decompile or disassemble the Software, except to the
+    extent that applicable law does not allow this restriction;
+ e) bypass or interfere with security, licensing or integrity features;
+ f) use the Software in violation of applicable law or another person's
+    rights; or
+ g) use the Software to introduce malware, disrupt systems or interfere with
+    another person's use of the Software.
+
+5. OWNERSHIP AND FEEDBACK
+The Software, including its code, design, names, branding and documentation,
+is owned by the Publisher or its licensors and is protected by applicable
+intellectual-property laws. Except for the limited license in this
+Agreement, no rights are granted to you. If you choose to send suggestions
+or feedback, you allow the Publisher to use them without restriction or
+payment, but this does not grant rights to your files or Output.
+
+6. YOUR FILES, PRIVACY AND SECURITY
+The Software is designed to process files locally on your computer. It does
+not upload your documents or include tracking or telemetry. Optional website
+or other external links open only when you choose them; visiting an external
+site may be subject to that site's own terms and privacy practices. Your
+device, operating system or other software may separately collect or transmit
+information.
+
+You are responsible for the files you select, the permissions and rights
+needed to use them, securing your device, and keeping appropriate backups.
+The Publisher cannot restore files that are lost, damaged or overwritten.
+Before saving over an original, make a separate copy if you need to preserve
+it.
+
+7. YOUR REVIEW AND USE OF RESULTS
+The Software is an assistance tool, not a substitute for professional
+judgment or independent verification. Results can be incomplete or
+inaccurate because of source-file quality, scanning, scaling, alignment,
+fonts, settings or other conditions. You are responsible for reviewing
+results and deciding whether they are suitable for your use.
+
+Before approving, releasing, manufacturing, constructing or acting on
+technical material, a qualified person must independently verify all
+critical dimensions, values, part numbers, revisions and changes against
+the authoritative source documents. Do not rely solely on an automated
+comparison for safety-critical, regulated or high-consequence decisions.
+
+8. COMPATIBILITY, AVAILABILITY AND SUPPORT
+The Software may depend on your device, operating system and other software.
+You are responsible for ensuring that your environment is suitable and for
+maintaining it. The Publisher does not promise that the Software will work
+with every device, file, format or future operating-system version, or that
+it will be continuously available, error-free or supported. No technical
+support or maintenance is included unless separately offered in writing.
+
+9. UPDATES AND TERMS
+The Publisher may offer updates, corrections or new versions, but this
+Agreement does not require the Publisher to provide them. Updates may add,
+change or remove features and may be subject to additional terms presented
+with that update. This Agreement applies to the version of the Software
+with which it is distributed. A revised Agreement applies to a later
+version only if presented for that version; it does not retroactively
+change the terms for a copy already licensed to you.
+
+10. THIRD-PARTY COMPONENTS
+The Software includes or relies on Third-Party Components, which may include
+Electron, PDF.js and pdf-lib. Those components remain subject to their own
+copyright notices and licenses. If a third-party license conflicts with
+this Agreement as to that component, the third-party license controls for
+that component. Nothing in this Agreement limits rights that a third-party
+license grants to you.
+
+11. DISCLAIMER OF WARRANTIES
+TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, THE SOFTWARE IS PROVIDED
+"AS IS" AND "AS AVAILABLE", WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+EXPRESS, IMPLIED OR STATUTORY, INCLUDING WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE, ACCURACY, TITLE AND NON-INFRINGEMENT. THE
+PUBLISHER DOES NOT WARRANT THAT DEFECTS WILL BE CORRECTED OR THAT THE
+SOFTWARE WILL MEET YOUR REQUIREMENTS. THIS SECTION DOES NOT EXCLUDE ANY
+WARRANTY OR RIGHT THAT CANNOT LAWFULLY BE EXCLUDED.
+
+12. LIMITATION OF LIABILITY
+TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, THE PUBLISHER AND ITS
+LICENSORS WILL NOT BE LIABLE FOR INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY OR
+CONSEQUENTIAL LOSS OR DAMAGE, OR FOR LOSS OF PROFITS, REVENUE, DATA,
+GOODWILL, PRODUCTION, BUSINESS OPPORTUNITY OR TIME, ARISING OUT OF OR
+RELATED TO THE SOFTWARE OR THIS AGREEMENT, EVEN IF ADVISED OF THE
+POSSIBILITY OF SUCH LOSS.
+
+TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, THE PUBLISHER'S TOTAL
+LIABILITY FOR ALL CLAIMS RELATING TO THE SOFTWARE OR THIS AGREEMENT WILL
+NOT EXCEED THE AMOUNT YOU PAID, IF ANY, TO OBTAIN THE SOFTWARE. Because the
+Software is provided free of charge, this amount may be zero. Nothing in
+this Agreement excludes or limits liability that cannot lawfully be
+excluded or limited, including liability for fraud or intentional
+misconduct where such limitation is prohibited.
+
+13. INDEMNITY FOR UNLAWFUL USE
+To the extent permitted by applicable law, you are responsible for claims
+arising from your unlawful use of the Software or your violation of another
+person's rights. This section does not require you to indemnify the
+Publisher for the Publisher's own unlawful conduct or for liability that
+cannot lawfully be shifted to you.
+
+14. SUSPENSION AND TERMINATION
+Your license continues unless it ends under this section. It terminates
+automatically if you materially breach this Agreement. Where the breach can
+be remedied, the Publisher may give you notice and a reasonable opportunity
+to remedy it before termination. Upon termination, stop using the Software
+and delete the copies you control. Sections that by their nature should
+continue after termination, including ownership, disclaimers, limitations
+of liability and general terms, will survive.
+
+15. GOVERNING LAW AND GENERAL TERMS
+This Agreement is governed by the laws of India, without regard to conflict
+of law principles, subject to any mandatory consumer protections and rights
+that apply to you. Any dispute will be handled by a court or other forum
+with jurisdiction under applicable law.
+
+This Agreement is the entire agreement between you and the Publisher about
+the Software and replaces prior agreements on that subject. If a provision
+is found unenforceable, it will be limited to the minimum extent necessary
+and the remaining provisions will continue in effect. A failure to enforce
+a provision is not a waiver of the right to enforce it later. You may not
+transfer this Agreement or your license except as permitted by applicable
+law. The Publisher may transfer its rights and obligations as part of a
+business reorganization or transfer, provided this does not reduce your
+mandatory legal rights. This Agreement does not create an agency,
+partnership or employment relationship.
+
+16. MANDATORY RIGHTS
+Nothing in this Agreement is intended to exclude, restrict or waive a
+consumer protection, statutory guarantee or other right that applicable
+law does not permit you to waive. Where a term conflicts with such a right,
+that term applies only to the extent permitted by law.
+
+Copyright (c) 2026 Redline Studio - textportdocx.in. All rights reserved.

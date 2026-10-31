@@ -1,0 +1,42 @@
+name: Build Redline Pro 1.0.0 Windows EXEs (Portable & Setup)
+
+on:
+  push:
+    branches: [ main, master ]
+    tags: [ "v*" ]
+  workflow_dispatch:
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build unpacked Windows directory
+        run: npx electron-builder --win dir --x64
+
+      - name: Patch executable icon and v1.0.0 metadata
+        run: node patch_exe.js "dist/win-unpacked/Redline Pro.exe" build/icon.ico
+
+      - name: Build RedlinePro-Portable-1.0.0.exe
+        run: npx electron-builder --win portable --prepackaged dist/win-unpacked --x64
+
+      - name: Build RedlinePro-Setup-1.0.0.exe (NSIS Installer)
+        run: makensis /DSRC="dist\win-unpacked" /DICON="build\icon.ico" /DLIC="LICENSE.txt" /DOUT="dist\RedlinePro-Setup-1.0.0.exe" installer.nsi
+
+      - name: Upload Portable & Setup EXEs as Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: RedlinePro-1.0.0-Windows-EXEs
+          path: |
+            dist/RedlinePro-Portable-1.0.0.exe
+            dist/RedlinePro-Setup-1.0.0.exe
