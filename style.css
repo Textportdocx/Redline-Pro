@@ -2026,7 +2026,7 @@ html[data-theme="light"] .rp-about-pill.ok {
   color: #7dd3fc;
 }
 
-/* Direct On-Page WYSIWYG Inline PDF Text Editor & MS Office Contextual Set */
+/* Direct On-Page WYSIWYG Inline PDF Text Editor & Contextual Set */
 .rp-contextual-tool-set {
   background: rgba(37, 99, 235, 0.06);
   border-left: 2px solid var(--acc) !important;
@@ -2205,4 +2205,8 @@ html[data-theme="light"] .rp-about-pill.ok {
   min-width: 44px;
   padding: 4px 6px;
   font-size: 10.5px;
+}
+
+.rp-edit-ribbon select {
+  padding-right: 20px;
 }

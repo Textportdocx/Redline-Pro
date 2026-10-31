@@ -114,6 +114,10 @@ async function loadCustomFontFile() {
         }
         sel.value = rawName;
       }
+      if (E.inlineText) {
+        E.inlineText.fam = rawName;
+        syncInlineTextEditorStyle();
+      }
       if (E.sel && E.sel.t === 'text') {
         pushAnnState('Change font family');
         E.sel.fam = rawName;
@@ -1322,7 +1326,7 @@ function updateContextualToolDock(activeTool) {
   const isPinOrTick = ['pin', 'checkmk', 'crossmk'].includes(t);
   const showDock = shouldShowContextualDock(activeTool);
 
-  // Font & Paragraph Set (#eFontSet / #eRowFont / #eRowTextFmt) is ALWAYS visible outside in its own MS Office set!
+  // Font & Paragraph Set (#eFontSet / #eRowFont / #eRowTextFmt) is ALWAYS visible outside in its own set!
   if ($('#eRowFont')) $('#eRowFont').hidden = false;
   if ($('#eRowTextFmt')) $('#eRowTextFmt').hidden = false;
 
@@ -1381,12 +1385,24 @@ function setActiveAlignUI(al) {
     if (b) b.classList.toggle('on', b.dataset.align === (al || 'left'));
   });
 }
+const FONT_SIZE_PRESETS = [8, 9, 10, 11, 12, 14, 16, 18, 20, 22, 24, 26, 28, 36, 48, 72];
 function syncFontSizeUI(ptVal) {
   const v = Math.max(4, Math.min(200, Math.round(+ptVal || 14)));
   if ($('#eFontSize')) $('#eFontSize').value = v;
-  if ($('#eFontSizePreset')) {
-    const match = [...$('#eFontSizePreset').options].some(o => +o.value === v);
-    if (match) $('#eFontSizePreset').value = String(v);
+  const sel = $('#eFontSizePreset');
+  if (sel) {
+    let match = [...sel.options].find(o => +o.value === v);
+    if (!match) {
+      match = new Option(`${v} pt`, String(v));
+      const next = [...sel.options].find(o => +o.value > v && o.value !== 'custom');
+      if (next) sel.insertBefore(match, next);
+      else {
+        const cust = [...sel.options].find(o => o.value === 'custom');
+        if (cust) sel.insertBefore(match, cust);
+        else sel.appendChild(match);
+      }
+    }
+    sel.value = String(v);
   }
 }
 function syncRibbonFromSelectedAnn(a) {
@@ -1505,27 +1521,41 @@ function applyEditorSizeValue(val, recordUndo = true) {
   overlay();
 }
 
-// Wire Swatches, Presets, Eraser Options, Pin Options & MS Office Font Controls
+// Wire Swatches, Presets, Eraser Options, Pin Options & Font Controls
 if ($('#eLoadFontBtn')) $('#eLoadFontBtn').onclick = loadCustomFontFile;
 if ($('#eFontSizePreset')) {
-  $('#eFontSizePreset').onchange = e => applyFontSizeValue(+e.target.value, true);
+  $('#eFontSizePreset').onchange = e => {
+    if (e.target.value === 'custom') {
+      const cur = +($('#eFontSize') ? $('#eFontSize').value : 14) || 14;
+      const res = prompt('Enter custom font size (4 - 200 pt):', String(cur));
+      if (res && +res >= 4 && +res <= 200) {
+        applyFontSizeValue(Math.round(+res), true);
+      } else {
+        syncFontSizeUI(cur);
+      }
+      return;
+    }
+    applyFontSizeValue(+e.target.value, true);
+  };
 }
 if ($('#eFontSize')) {
   $('#eFontSize').addEventListener('input', e => { if (+e.target.value >= 4) applyFontSizeValue(+e.target.value, false); });
   $('#eFontSize').addEventListener('change', e => { if (+e.target.value >= 4) applyFontSizeValue(+e.target.value, true); });
 }
-if ($('#eFontDec')) {
-  $('#eFontDec').onclick = () => {
-    const cur = +($('#eFontSize') ? $('#eFontSize').value : ($('#eSize') ? $('#eSize').value : 14)) || 14;
-    const step = cur <= 10 ? 1 : 2;
-    applyFontSizeValue(Math.max(4, cur - step), true);
-  };
-}
 if ($('#eFontInc')) {
   $('#eFontInc').onclick = () => {
     const cur = +($('#eFontSize') ? $('#eFontSize').value : ($('#eSize') ? $('#eSize').value : 14)) || 14;
-    const step = cur < 10 ? 1 : 2;
-    applyFontSizeValue(Math.min(200, cur + step), true);
+    const next = FONT_SIZE_PRESETS.find(s => s > cur);
+    const target = next != null ? next : Math.min(200, cur + (cur >= 72 ? 10 : 2));
+    applyFontSizeValue(target, true);
+  };
+}
+if ($('#eFontDec')) {
+  $('#eFontDec').onclick = () => {
+    const cur = +($('#eFontSize') ? $('#eFontSize').value : ($('#eSize') ? $('#eSize').value : 14)) || 14;
+    const prev = [...FONT_SIZE_PRESETS].reverse().find(s => s < cur);
+    const target = prev != null ? prev : Math.max(4, cur - (cur <= 8 ? 1 : 2));
+    applyFontSizeValue(target, true);
   };
 }
 if ($('#eStrokeDec')) {
@@ -1736,7 +1766,7 @@ async function signPad() {
 
 async function openRichTextDialog(initial = {}) {
   const fam = initial.fam || ($('#eFontFam') ? $('#eFontFam').value : 'Helvetica');
-  const size = initial.size || (+$('#eSize').value || 14);
+  const size = initial.size || (+($('#eFontSize') ? $('#eFontSize').value : ($('#eSize') ? $('#eSize').value : 14)) || 14);
   const bold = initial.bold != null ? initial.bold : ($('#eBold') ? $('#eBold').classList.contains('on') : false);
   const italic = initial.italic != null ? initial.italic : ($('#eItalic') ? $('#eItalic').classList.contains('on') : false);
   const underline = initial.underline != null ? initial.underline : ($('#eUnderline') ? $('#eUnderline').classList.contains('on') : false);
@@ -1762,7 +1792,7 @@ async function openRichTextDialog(initial = {}) {
   ], initial.okLabel || 'Add Text');
 }
 
-// ---------- Direct On-Page WYSIWYG Inline Text Editor (MS Office / Acrobat Style) ----------
+// ---------- Direct On-Page WYSIWYG Inline Text Editor ----------
 function syncInlineTextEditorStyle() {
   const stObj = E.inlineText;
   const box = $('#rp-inline-text-box');
@@ -1818,7 +1848,7 @@ function openInlineTextEditor(opts = {}) {
   const startY = pdfItem ? (pdfItem.base - defaultSize * BASE) : (ann ? ann.y : (opts.y || 50));
   const initialText = pdfItem ? pdfItem.str : (ann ? (ann.text || '') : (opts.text || ''));
 
-  // Sync top MS Office Font ribbon controls to match this text box
+  // Sync top Font ribbon controls to match this text box
   if ($('#eFontFam')) $('#eFontFam').value = defaultFam;
   syncFontSizeUI(defaultSize);
   if ($('#eTextColor')) $('#eTextColor').value = defaultColor;

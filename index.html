@@ -124,7 +124,7 @@
 <div id="view-edit" class="view" hidden>
  <div class="rp-ribbon-container rp-edit-studio-header">
   <div class="rp-ribbon-tabs" id="edit-ribbon-tabs">
-   <button class="rp-tab-btn active" data-etab="home" title="MS Office Home Tab: File, Clipboard, Font &amp; Paragraph, Direct PDF Typing &amp; Quick Draw"><i data-ic="fontFile"></i><span>Home</span></button>
+   <button class="rp-tab-btn active" data-etab="home" title="Home Tab: File, Clipboard, Font &amp; Paragraph, Direct PDF Typing &amp; Quick Draw"><i data-ic="fontFile"></i><span>Home</span></button>
    <button class="rp-tab-btn" data-etab="draw" title="Freehand Pen, Highlighter, Eraser, Shapes, Revision Clouds, Callouts, Pins, Stamps &amp; Signatures"><i data-ic="tabMarkup"></i><span>Insert &amp; Draw</span></button>
    <button class="rp-tab-btn" data-etab="review" title="Sticky Notes, Text Highlights, In-Place PDF Text Edit, Search, Distance &amp; Area Takeoffs"><i data-ic="note"></i><span>Review &amp; Measure</span></button>
    <button class="rp-tab-btn" data-etab="pages" title="Rotate, Insert Blank/PDF, Duplicate, Delete, Crop, Resize (A4/A3/ANSI), Extract &amp; Reorder Pages"><i data-ic="pageSize"></i><span>Page Layout</span></button>
@@ -161,7 +161,7 @@
    <!-- SET 3: MS OFFICE FONT & PARAGRAPH SET (Always Outside on Home, Draw, Review, All) -->
    <div class="grp" data-egrp="home draw review" id="eFontSet"><div class="row col" style="gap:4px">
     <div class="row" id="eRowFont" style="gap:4px">
-     <select id="eFontFam" style="max-width:138px;height:24px;font-weight:600" title="Font Family (18+ Built-In &amp; Custom Loaded Fonts)">
+     <select id="eFontFam" style="width:155px;height:24px;font-weight:600;padding-right:20px" title="Font Family (18+ Built-In &amp; Custom Loaded Fonts)">
       <optgroup label="Sans-Serif (Modern &amp; UI)">
        <option value="Helvetica" selected>Helvetica</option>
        <option value="Arial">Arial</option>
@@ -190,7 +190,7 @@
       </optgroup>
       <optgroup label="Custom Loaded Fonts" id="eCustomFontGroup" hidden></optgroup>
      </select>
-     <select id="eFontSizePreset" style="width:54px;height:24px" title="Font Size Presets (pt)">
+     <select id="eFontSizePreset" style="width:62px;height:24px;font-weight:600;padding-right:16px" title="Font Size (pt)">
       <option value="8">8 pt</option>
       <option value="9">9 pt</option>
       <option value="10">10 pt</option>
@@ -200,15 +200,18 @@
       <option value="16">16 pt</option>
       <option value="18">18 pt</option>
       <option value="20">20 pt</option>
+      <option value="22">22 pt</option>
       <option value="24">24 pt</option>
+      <option value="26">26 pt</option>
       <option value="28">28 pt</option>
       <option value="36">36 pt</option>
       <option value="48">48 pt</option>
       <option value="72">72 pt</option>
+      <option value="custom">Custom...</option>
      </select>
-     <input type="number" id="eFontSize" value="14" min="4" max="200" style="width:42px;height:22px" title="Custom Font Size (pt)">
-     <button type="button" class="rp-fmt-btn" id="eFontDec" title="Decrease Font Size (A▼)"><b>A▼</b></button>
-     <button type="button" class="rp-fmt-btn" id="eFontInc" title="Increase Font Size (A▲)"><b>A▲</b></button>
+     <input type="hidden" id="eFontSize" value="14">
+     <button type="button" class="rp-fmt-btn" id="eFontInc" title="Increase Font Size (A▲)"><b style="font-size:12px;line-height:1">A</b><span style="font-size:9px">▲</span></button>
+     <button type="button" class="rp-fmt-btn" id="eFontDec" title="Decrease Font Size (A▼)"><b style="font-size:10px;line-height:1">A</b><span style="font-size:8px">▼</span></button>
      <button type="button" class="rp-fmt-btn" id="eLoadFontBtn" title="Load Custom Font File (.ttf, .otf, .woff)"><i data-ic="fontFile"></i><span>+Font</span></button>
     </div>
     <div class="row" id="eRowTextFmt" style="gap:4px">
@@ -225,7 +228,7 @@
      <label class="chk" title="Fill Text Box Background"><input type="checkbox" id="eTextBg"> Box Fill</label>
      <input type="color" id="eBgColor" value="#fffbeb" title="Text Box Background / Shape Fill Colour" style="width:22px;height:20px">
     </div>
-   </div><div class="cap">Font &amp; Paragraph (MS Office)</div></div>
+   </div><div class="cap">Font &amp; Paragraph</div></div>
 
    <!-- SET 4: PENS, SHAPES & MARKUP TOOLS (Home & Insert/Draw) -->
    <div class="grp" data-egrp="home draw"><div class="row" id="tools">
@@ -396,7 +399,7 @@
      <div class="rp-launchpad-badge"><i data-ic="sparkle"></i><span>ENTERPRISE PDF MARKUP, TYPOGRAPHY &amp; CAD STUDIO</span></div>
      <img src="build/logo.png" alt="Redline Pro" class="rp-img">
      <div class="rp-launchpad-title">Open or Drop a PDF Document to Start Reviewing</div>
-     <small>MS Office-style Ribbon sets, direct on-page PDF typing, 18+ built-in fonts + custom .TTF/.OTF loader, shapes, revision clouds, callouts, redaction, and multi-PDF assembly.</small>
+     <small>Ribbon sets, direct on-page PDF typing, 18+ built-in fonts + custom .TTF/.OTF loader, shapes, revision clouds, callouts, redaction, and multi-PDF assembly.</small>
      <div class="rp-sample-actions">
       <button type="button" id="rp-edit-open-btn" class="rp-sample-btn rp-btn-hero-primary" title="Open a PDF file from your computer (Ctrl+O)"><i data-ic="open"></i><span>Open PDF Document</span></button>
       <button type="button" id="rp-edit-sample-btn" class="rp-sample-btn" title="Generate and open a 2-page sample vector engineering schematic in the Editor"><i data-ic="zap"></i><span>Load 2-Page Sample Schematic</span></button>

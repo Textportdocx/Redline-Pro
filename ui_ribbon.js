@@ -3587,7 +3587,7 @@
       };
       aside.appendChild(reopenTab);
     }
-    // Editor #etools is hidden by default (all sets are in the top MS Office Ribbon)
+    // Editor #etools is hidden by default (all sets are in the top Ribbon)
     const edAside = $('#etools');
     if (edAside) {
       const edTabs = edAside.querySelector('.tabs');
@@ -4512,7 +4512,7 @@
       }
     };
 
-    // Wire Editor MS Office Set-Wise Ribbon Tabs (#edit-ribbon-tabs)
+    // Wire Editor Set-Wise Ribbon Tabs (#edit-ribbon-tabs)
     const editTabs = $('#edit-ribbon-tabs');
     const editRibbon = document.querySelector('#view-edit .rp-edit-ribbon');
     if (editTabs && editRibbon) {
