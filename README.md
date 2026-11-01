@@ -1,4 +1,4 @@
-# Redline Pro 1.0 — Enterprise-Grade Engineering Review & Compare Studio
+# Redline Pro & Redline Pro PDF Editor 1.0 — Two Separate Applications in One Codebase
 
 **Publisher / Developer:** Redline Studio · [textportdocx.in](https://textportdocx.in)  
 **Version:** 1.0.0  
@@ -7,92 +7,15 @@
 
 ---
 
-## Overview
+## Dual-Application Architecture (One Codebase, Two Separate Applications)
 
-Redline Pro 1.0 transforms the application from a standard drawing diff tool into a complete, lightweight, Swiss Army Knife engineering review workbench (comparable to Bluebeam Revu eXtreme and CAM350, but completely free and offline).
+This repository delivers **two standalone applications** powered by a single unified codebase:
 
----
-
-## What's New in Version 1.0.0
-
-### Module 1: Crisp Modern UI & Floating/Dockable Compare Layer Manager
-- **Categorized Ribbon Bar:** Clean tabbed ribbon bar organizing engineering tools:
-  - `Review & Compare`: Open Base (Rev A), Open New (Rev B), Auto-Align, View Modes, Jump to Defect.
-  - `View & Enhance`: Normal, High Contrast Boost, Blueprint Dark CAD, Split Curtain, Invert, 100% Sharp Zoom.
-  - `Markup & Stamps`: Revision Cloud, Leader Arrow, Callout, Dynamic Stamp, Freehand Pen, Redact.
-  - `Measure (OSNAP)`: Calibrate Scale, Distance, Polyline, Area, Tally / BOM Counter.
-  - `CAD & CAM`: Import DXF, Export DXF, PCB CAM Compare (Gerber/Drill), 4-mil Clearance.
-  - `Export & Share`: Save PDF with Diffs, Export High-Res Image, Export .dxf, Executive Audit Report, Session .redline.
-- **Moveable & Dockable Compare Layer Panel:** Floating, draggable, dockable panel with:
-  - Solo Eye button, Opacity slider (0–100%), and Tint color picker for Layer A (Base) and Layer B (Revised).
-  - Diff Layer toggle (+Green additions / −Red deletions) and sensitivity threshold slider.
-  - Micro-Align controls with 1px and 0.1px step nudge buttons and rotational compensation.
-- **Interactive Curtain Split Slider:** Smooth 60 FPS viewport divider showing pure Rev A on the left and Rev B on the right without re-rasterizing the underlying pages.
-- **Resizable & Collapsible Sidebar:** 4px draggable splitter with collapse toggle (`[◀◀]` / `Ctrl+B`) that persists user width.
-
-### Module 2: Precision Auto-Alignment & "Jump-to-Defect" Navigator
-- **Sub-Pixel Auto-Alignment:** Automated feature/corner anchor matcher detecting translation `(dx, dy)` and rotational skew `(dθ)`.
-- **3-Point Fiducial Snap Tool:** User clicks 3 matching reference points (e.g. schematic grid corners or PCB mounting holes) on Rev A and Rev B to calculate affine transform and snap pages with sub-pixel precision.
-- **Smart "Jump-to-Defect" Navigator:**
-  - Contiguous diff pixel clustering with configurable noise threshold (1–10 px) filtering out antialiasing noise.
-  - Next Defect (`N` / `F3`) and Previous Defect (`P` / `Shift+F3`) keyboard navigation smoothly centering and zooming each defect.
-  - Sidebar Defect Checklist marking each issue as `[Open]` | `[Approved]` | `[Flagged]` | `[Ignored]`.
-
-### Module 3: Offline Bi-Directional CAD (DXF) Engine
-- **PDF to CAD (.dxf) Export:** Extracts PDF vector drawing paths and text via PDF.js operator list (`OPS.constructPath`, `moveTo`, `lineTo`, `curveTo`, `showText`) into standard AutoCAD R12/2000 ASCII DXF.
-  - Units modal supporting Millimeters (`mm`, `$INSUNITS = 4`), Mils (`mils`, `$INSUNITS = 10`), Inches (`in`, `$INSUNITS = 1`), and Scale Presets (1:1, 1:50, 1:100, 1:1000).
-  - Semantic layer classification: `SHEET_BORDER`, `GEOMETRY`, `TEXT`, `REDLINE_DIFFS`.
-- **CAD (.dxf) to PDF/Canvas Import:** Native client-side ASCII DXF parser for `LINE`, `POLYLINE`, `LWPOLYLINE`, `CIRCLE`, `ARC`, `TEXT`, and `MTEXT`.
-
-### Module 4: Industrial PCB CAM Engine (Gerber RS-274X & Excellon Drill)
-- **Gerber RS-274X Parser:** Coordinates (`%FS...%`), units (`%MOIN*%` / `%MOMM*%`), standard apertures (`%ADD...%` Circle, Rectangle, Obround, Polygon), D01/D02/D03 commands, and G01/G02/G03 interpolation.
-- **Excellon NC Drill Parser:** Tool definitions (`T01C...`), coordinates `X...Y...`, and drill hit mapping.
-- **High-Contrast PCB Copper Rendering:** Dark Green substrate base, Copper traces, and Gold ENIG pads.
-- **CAM vs. PDF & Gerber vs. Gerber Compare:**
-  - Red: Missing copper / missing drill holes.
-  - Green: Added copper / extra drill holes.
-  - Amber / Yellow: Clearance warning (spacing violations below 4 mils / 0.1 mm).
-
-### Module 5: Engineering Measurement & Markup Suite (OSNAP)
-- **Precision Calibration & Measurement:**
-  - Scale calibration against known dimension lines with pixel-to-unit ratio storage.
-  - Distance & Cumulative Polyline tool for multi-segment pipe and wire runs.
-  - Closed polygon Area & Perimeter tool with live readout (Shoelace formula).
-  - Magnetic Object Snap (OSNAP): Snapping cursor to nearest vertices (square), midpoints (triangle), and center points (circle) within 8px radius.
-  - Tally & BOM Counter: Inspection badges (`#1`, `#2`, `#3`...) with automated tally list and CSV export.
-- **Professional Markups & Dynamic Stamps:**
-  - ANSI/ISO-standard scalloped revision clouds with Revision Delta triangles (`Δ Rev 2`).
-  - Leader Callouts: Multi-point arrows with auto-wrapping text callout boxes.
-  - Dynamic Engineering Stamps: Vector stamps (`APPROVED`, `REJECTED`, `REVISED & RESUBMIT`, `FOR REVIEW ONLY`) stamped with current date, time, reviewer name, and cryptographic SHA-256 document hash.
-
-### Module 6: Virtual Viewport Memory Optimization & Audit Reports
-- **512x512 Virtual Tiling:** Large high-density schematics (A0/E-size sheets) rendered in virtual tiles; off-screen canvases are automatically disposed from LRU cache to prevent memory exhaustion.
-- **Dedicated Web Worker:** Heavy pixel diffing and connected region calculations offloaded to background Web Workers.
-- **Session Save (`.redline`):** JSON-based project file storing document paths, diff classifications, reviewer notes, defect approvals, and measurement calibrations.
-- **Executive Summary PDF Audit Report:** Multi-page PDF report with document metadata, comparison statistics, full-sheet thumbnail, and itemized defect checklist with running headers and footers "Redline Studio · textportdocx.in".
-- **Excel/CSV Defect Export:** Structured export of defect IDs, page numbers, coordinates, statuses, and reviewer notes.
-
----
-
-## File Architecture
-
-| File | Module / Responsibility |
-|---|---|
-| `dxf_engine.js` | Module 3: AutoCAD R12/2000 ASCII DXF export and import engine |
-| `cam_engine.js` | Module 4: Gerber RS-274X, Excellon NC Drill parser, PCB copper renderer, 4-mil clearance check |
-| `measure_engine.js` | Module 5: Scale calibration, OSNAP, distance, polyline, area, tally BOM counter, revision clouds, SHA-256 stamps |
-| `worker_engine.js` | Module 6: 512x512 virtual tile grid, memory manager, and Web Worker RPC bridge |
-| `worker.js` | Module 6: Dedicated background Web Worker for heavy pixel diffing and cluster labeling |
-| `ui_ribbon.js` | Module 1 & 2: Categorized ribbon tabs, floating layer dock, curtain slider, fiducial align, defect navigator |
-| `pro.js` | Pro additions: Enhanced views (contrast/blueprint), sharp zoom (`#hq`), panel resizers, system hooks |
-| `app.js` | Compare engine (`window.CMP`), pixel diffing, layer classification, zoom/pan transforms |
-| `editor.js` | Annotation and markup workspace (`window.RE`) |
-| `extras.js` | Editor tabs, context menus, auto-save recovery, text LCS diff, batch compare |
-| `main.js` | Electron main process, IPC handlers, CLI arguments (`--compare`), window management |
-| `preload.js` | Secure IPC bridge (`window.native`) |
-| `installer.nsi` | NSIS installer script with Windows Explorer shell context menu integration |
-| `style.css` | Complete stylesheet for workspace, ribbons, docks, curtains, and dialogs |
-| `index.html` | Workspace markup |
+1. **Redline Pro (`index.html` / `Redline Pro.exe`)** — **Engineering Drawing Compare, AutoCAD DXF & CAM350 Verification Studio**
+   - Dedicated to A/B schematic & drawing comparison, sub-pixel auto-alignment, 3-point fiducial registration, 60 FPS split curtain, 4x optical loupe, Gerber RS-274X & Excellon NC Drill inspection, IPC-D-356 netlist verification, IPC Class 1/2/3 DFM checks, bi-directional AutoCAD DXF studio, and Executive QA Audit Reports.
+2. **Redline Pro PDF Editor (`pdf-editor.html` / `Redline Pro PDF Editor.exe`)** — **Enterprise PDF Markup, Typography, Measurement & Page Assembly Application**
+   - Dedicated standalone PDF Editor application featuring MS Office-style ribbon tabs (`Home`, `Insert & Draw`, `Review & Measure`, `Page Layout`, `Document & Export`), direct on-page WYSIWYG typing, in-place PDF text editing, 18+ built-in fonts + custom `.TTF/.OTF/.WOFF` font loader, freehand pen, object/brush eraser, shapes, ANSI/ISO revision clouds, leader callouts, numbered inspection pins, QA stamps, handwritten signatures, permanent security redaction, calibrated distance & area measurement, multi-PDF merge/split/extract/crop/resize/Bates numbering, and multi-tab document management.
+   - **Seamless Inter-App Bridge:** Launch **Redline Pro PDF Editor** directly from **Redline Pro** in its own independent native window (or vice versa), and send open PDFs from **Redline Pro PDF Editor** directly to **Redline Pro** Compare Slot A or Slot B with one click.
 
 ---
 
@@ -102,21 +25,63 @@ Requires Node.js 18 or newer:
 
 ```bash
 npm install
+
+# Launch App 1: Redline Pro (Drawing & CAM Compare)
 npm start
+
+# Launch App 2: Redline Pro PDF Editor (Standalone PDF Editor)
+npm run start:pdf-editor
+
+# Launch Both Applications Simultaneously in Separate Windows
+npm run start:both
 ```
 
-## Packaging for Distribution
+On Windows, you can also double-click:
+- `Start-Redline-Pro.bat` — Opens **Redline Pro**
+- `Start-Redline-Pro-PDF-Editor.bat` — Opens **Redline Pro PDF Editor**
+
+---
+
+## Packaging for Distribution (Windows EXEs)
+
+Run `Build-Windows-EXEs.bat` (or `npm run dist:all`):
 
 ```bash
-# Package unpacked Windows directory
+# 1. Package unpacked Windows directory
 npm run dist:dir
 
-# Patch executable with high-res icon and metadata
+# 2. Patch "Redline Pro.exe" AND generate/patch "Redline Pro PDF Editor.exe"
 npm run patch:exe
 
-# Build portable single-executable binary
+# 3. Build portable executable
 npm run dist:portable
 
-# Build Windows NSIS Setup Installer
-makensis -DSRC=$PWD/dist/win-unpacked -DICON=$PWD/build/icon.ico -DOUT=$PWD/RedlinePro-Setup-1.0.0.exe installer.nsi
+# 4. Build Windows NSIS Setup Installer (installs both apps + Desktop/Start Menu shortcuts)
+npm run dist:setup
 ```
+
+The NSIS installer (`RedlinePro-Setup-1.0.0.exe`) installs both `Redline Pro.exe` and `Redline Pro PDF Editor.exe`, creates Desktop and Start Menu shortcuts for both applications, and registers Windows Explorer right-click context menu entries (`Edit with Redline Pro PDF Editor` and `Compare with Redline Pro`).
+
+---
+
+## File Architecture
+
+| File | Module / Responsibility |
+|---|---|
+| `index.html` | **App 1 Entry:** Redline Pro (Drawing Compare, CAD DXF & CAM350 Verification) |
+| `pdf-editor.html` | **App 2 Entry:** Redline Pro PDF Editor (Standalone PDF Markup, Typography & Page Studio) |
+| `main.js` | Electron dual-application main process, multi-window manager (`compareWin` & `editorWin`), IPC bridge, CLI/EXE routing (`--pdf-editor`, `--compare`, `--both`) |
+| `preload.js` | Secure IPC bridge (`window.native`, including `openPdfEditor` and `openCompareApp`) |
+| `patch_exe.js` | Builds and patches both `Redline Pro.exe` and `Redline Pro PDF Editor.exe` with PE VersionInfo metadata and icons |
+| `installer.nsi` | NSIS installer script creating shortcuts and Explorer shell associations for both applications |
+| `dxf_engine.js` | Module 3: AutoCAD R12/2000 ASCII DXF export and import engine |
+| `cam_engine.js` | Module 4: Gerber RS-274X, Excellon NC Drill parser, PCB copper renderer, 4-mil clearance check |
+| `measure_engine.js` | Module 5: Scale calibration, OSNAP, distance, polyline, area, tally BOM counter, revision clouds, SHA-256 stamps |
+| `worker_engine.js` | Module 6: 512x512 virtual tile grid, memory manager, and Web Worker RPC bridge |
+| `worker.js` | Module 6: Dedicated background Web Worker for heavy pixel diffing and cluster labeling |
+| `ui_ribbon.js` | Module 1 & 2: Categorized ribbon tabs, floating layer dock, curtain slider, fiducial align, defect navigator |
+| `pro.js` | Pro additions: Enhanced views (contrast/blueprint), sharp zoom (`#hq`), panel resizers, system hooks |
+| `app.js` | Compare engine (`window.CMP`), pixel diffing, layer classification, zoom/pan transforms |
+| `editor.js` | PDF Editor workspace (`window.RE`) and inter-app handoff to Compare |
+| `extras.js` | Editor tabs, context menus, auto-save recovery, text LCS diff, batch compare |
+| `style.css` | Complete stylesheet for both applications |

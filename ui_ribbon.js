@@ -4467,7 +4467,7 @@
 
     // Wire 3 Primary Empty-State Quick-Launch Cards
     if ($('#rp-card-compare-drawings')) $('#rp-card-compare-drawings').onclick = () => { if (typeof setView === 'function') setView('compare'); if ($('#openA')) $('#openA').click(); };
-    if ($('#rp-card-pdf-studio')) $('#rp-card-pdf-studio').onclick = () => { if (typeof setView === 'function') setView('edit'); };
+    if ($('#rp-card-pdf-studio')) $('#rp-card-pdf-studio').onclick = () => showCAM350WorkbenchModal('format');
     if ($('#rp-card-load-samples')) $('#rp-card-load-samples').onclick = () => promptSampleDrawings();
 
     // Wire Compare Launchpad Quick Cards

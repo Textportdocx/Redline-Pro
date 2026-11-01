@@ -2633,7 +2633,18 @@ const ops = {
   },
   async meta(p) { await edit(d => { d.setTitle(p.title); d.setAuthor(p.author); d.setSubject(p.subject); d.setKeywords(p.keywords.split(',').map(s => s.trim()).filter(Boolean)); }, 'Properties updated'); },
   async opt() { const before = E.bytes.length; await edit(async d => d, ''); st('Rewritten: ' + (before / 1024).toFixed(0) + ' KB to ' + (E.bytes.length / 1024).toFixed(0) + ' KB'); },
-  async send(k) { if (!E.bytes) return st('Open a PDF first.'); await commit(); window.setView('compare'); await window.compareLoadBytes(k, E.bytes, E.name, E.path); }
+  async send(k) {
+    if (!E.bytes) return st('Open a PDF first.');
+    await commit();
+    if (document.body.dataset.app === 'pdf-editor' && window.native && typeof window.native.openCompareApp === 'function' && !window.native.isTesting) {
+      await window.openCompareApp({ slot: k, bytes: E.bytes, name: E.name, path: E.path });
+      st('Sent ' + E.name + ' to Redline Pro Compare (Slot ' + k + ')');
+      if (window.rpToast) window.rpToast('Sent ' + E.name + ' to Redline Pro Compare (Slot ' + k + ')');
+      return;
+    }
+    window.setView('compare');
+    await window.compareLoadBytes(k, E.bytes, E.name, E.path);
+  }
 };
 const D = {
   which: { type: 'select', id: 'which', label: 'Pages', options: [{ label: 'All pages', value: 'all' }, { label: 'Selected pages', value: 'sel' }] },
@@ -2737,7 +2748,7 @@ document.querySelectorAll('#etools [data-op], .rp-edit-ribbon [data-op]').forEac
 if ($('#rp-launch-blank')) $('#rp-launch-blank').onclick = () => ACT.op('blank');
 if ($('#rp-launch-merge')) $('#rp-launch-merge').onclick = () => ACT.op('merge');
 if ($('#rp-launch-images')) $('#rp-launch-images').onclick = () => ACT.op('images');
-if ($('#rp-launch-compare')) $('#rp-launch-compare').onclick = () => window.setView && window.setView('compare');
+if ($('#rp-launch-split')) $('#rp-launch-split').onclick = () => ACT.op('split');
 
 // ---------- open, save ----------
 async function pickEditor() {

@@ -914,12 +914,13 @@ async function testAsync(name, fn) {
            nsi.includes('WriteRegStr HKCU "${UNINSTKEY}" "URLUpdateInfo" "https://redline.textportdocx.in"'),
       "installer.nsi must write URLInfoAbout, HelpLink, and URLUpdateInfo under UNINSTKEY");
 
-    // 2. Full-Window Drag-and-Drop Visual Target
+    // 2. Full-Window Drag-and-Drop Visual Target (Isolated per application)
+    const pdfEdHtml = fs.readFileSync("pdf-editor.html", "utf8");
     assert(html.includes('id="rp-drop-backdrop"') &&
            html.includes('data-dropzone="A"') &&
            html.includes('data-dropzone="B"') &&
-           html.includes('data-dropzone="edit"'),
-      "index.html must include #rp-drop-backdrop with Drop Slot A, Drop Slot B, and PDF Studio drop zones");
+           pdfEdHtml.includes('data-dropzone="edit"'),
+      "index.html must include Drop Slot A & B, and pdf-editor.html must include isolated PDF Editor drop zone");
     assert(appJs.includes("hideDropBackdrop") && appJs.includes("targetZone === 'A'") && appJs.includes("targetZone === 'B'"),
       "app.js must route dropped files based on active dropzone target");
 
@@ -1142,6 +1143,57 @@ async function testAsync(name, fn) {
       'extras.js must exclude live render/DOM handles from tab snapshots and clean up batch-compared PDF pages');
     assert(ribJs.includes('cvRevA.width = 0; cvRevA.height = 0;') && ribJs.includes('CompareHistory') && ribJs.includes('clear()'),
       'ui_ribbon.js must zero temporary CAM/DXF offscreen canvases and clear CompareHistory on new document loads');
+  });
+
+
+  // ----------------------------------------------------
+  // MODULE 9: ISOLATED DUAL-APPLICATION ARCHITECTURE & CUSTOM PDF EDITOR ICON
+  // ----------------------------------------------------
+  console.log('\n--- MODULE 9: Isolated Dual-Application Architecture & Custom PDF Editor Icon ---');
+
+  test('Standalone Redline Pro PDF Editor (pdf-editor.html) is strictly isolated with its own custom icon and zero Compare shortcuts', () => {
+    assert(fs.existsSync('pdf-editor.html'), 'pdf-editor.html must exist as a separate application entry file');
+    assert(fs.existsSync('build/pdf-editor-icon.svg'), 'build/pdf-editor-icon.svg must exist');
+    assert(fs.existsSync('build/pdf-editor-icon.png'), 'build/pdf-editor-icon.png must exist');
+    assert(fs.existsSync('build/pdf-editor-logo.png'), 'build/pdf-editor-logo.png must exist');
+    assert(fs.existsSync('build/pdf-editor-icon.ico'), 'build/pdf-editor-icon.ico must exist');
+
+    const pdfEdHtml = fs.readFileSync('pdf-editor.html', 'utf8');
+    const idxHtml = fs.readFileSync('index.html', 'utf8');
+
+    assert(pdfEdHtml.includes('<title>Redline Pro PDF Editor'), 'pdf-editor.html must have Redline Pro PDF Editor title');
+    assert(pdfEdHtml.includes('data-view="edit" data-app="pdf-editor"'), 'pdf-editor.html body must boot directly with data-view="edit" and data-app="pdf-editor"');
+    assert(pdfEdHtml.includes('href="build/pdf-editor-icon.png"') && pdfEdHtml.includes('src="build/pdf-editor-logo.png"'),
+      'pdf-editor.html must use build/pdf-editor-icon.png and build/pdf-editor-logo.png');
+    assert(!pdfEdHtml.includes('Cross-Check in Compare') && !pdfEdHtml.includes('data-op="toA"') && !pdfEdHtml.includes('id="rp-launch-compare"'),
+      'pdf-editor.html must not contain any in-app shortcuts to Compare');
+    assert(!idxHtml.includes('id="open-pdf-editor-app-btn"') && !idxHtml.includes('data-dropzone="edit"'),
+      'index.html must not contain any in-app shortcuts or drop zones to open PDF Editor');
+  });
+
+  test('Electron main.js and menu.js enforce strict isolation between Redline Pro and Redline Pro PDF Editor', () => {
+    const mainJs = fs.readFileSync('main.js', 'utf8');
+    const menuJs = fs.readFileSync('menu.js', 'utf8');
+
+    assert(mainJs.includes('function isPdfEditorMode(') && mainJs.includes('pdf-editor.html') && mainJs.includes('pdf-editor-icon.png'),
+      'main.js must detect PDF Editor mode and load pdf-editor.html with pdf-editor-icon.png');
+    assert(!mainJs.includes("ipcMain.handle('open-pdf-editor'") && !mainJs.includes("ipcMain.handle('open-compare-app'"),
+      'main.js must not expose cross-app window launchers');
+    assert(!menuJs.includes("['ctrl+1'") && !menuJs.includes("['ctrl+2'") && !menuJs.includes('Send to Compare as A'),
+      'menu.js must not include Ctrl+1/Ctrl+2 view-switching shortcuts or Send to Compare menu items');
+  });
+
+  test('Packaging (package.json, patch_exe.js, installer.nsi) embeds dedicated icons for both Redline Pro.exe and Redline Pro PDF Editor.exe', () => {
+    const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+    const patchJs = fs.readFileSync('patch_exe.js', 'utf8');
+    const nsi = fs.readFileSync('installer.nsi', 'utf8');
+
+    assert(pkg.build.files.includes('pdf-editor.html') && pkg.build.files.includes('build/pdf-editor-icon.ico'),
+      'package.json build.files must include pdf-editor.html and build/pdf-editor-icon.ico');
+    assert(patchJs.includes('Redline Pro PDF Editor.exe') && patchJs.includes('pdf-editor-icon.ico'),
+      'patch_exe.js must patch Redline Pro PDF Editor.exe with build/pdf-editor-icon.ico');
+    assert(nsi.includes('!define EDITORICON "build\\pdf-editor-icon.ico"') && nsi.includes('$INSTDIR\\pdf-editor.ico'),
+      'installer.nsi must install pdf-editor.ico and assign it to Redline Pro PDF Editor shortcuts and Explorer context menu');
   });
 
   console.log('\n====================================================');

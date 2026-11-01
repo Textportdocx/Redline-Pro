@@ -15,6 +15,7 @@ contextBridge.exposeInMainWorld('native', {
   setProgress: frac => ipcRenderer.invoke('set-progress', frac),
   setBusyLock: active => ipcRenderer.invoke('set-busy-lock', active),
   openUrl: u => ipcRenderer.invoke('open-url', u),
+  getAppMode: () => ipcRenderer.invoke('get-app-mode'),
   getPathForFile: f => {
     try {
       return (webUtils && typeof webUtils.getPathForFile === 'function') ? webUtils.getPathForFile(f) : ((f && f.path) || '');

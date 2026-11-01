@@ -1,15 +1,15 @@
 <!DOCTYPE html>
 <html lang="en"><head><meta charset="utf-8"><title>Redline Pro - PDF Compare &amp; Review | Redline Studio</title><link rel="icon" href="build/icon.png" type="image/png"><link rel="stylesheet" href="style.css"></head>
-<body data-view="compare">
+<body data-view="compare" data-app="compare">
 <div id="busy" hidden></div>
 <div id="top">
- <div class="brand" id="brand-about" title="About Redline Pro 1.0.0 — Click for capabilities &amp; system info" style="cursor:pointer"><img src="build/logo.png" alt="Redline Pro" class="rp-img"><b>Redline Pro</b><small class="rp-pub">by Redline Studio</small></div>
+ <div class="brand" id="brand-about" title="About Redline Pro 1.0.0 — Click for capabilities &amp; system info" style="cursor:pointer"><img src="build/logo.png" alt="Redline Pro" class="rp-img"><b id="rp-brand-name">Redline Pro</b><small class="rp-pub">by Redline Studio</small></div>
  <nav id="menubar"></nav>
  <span id="docname"></span>
  <span class="grow"></span>
  <button id="theme" class="ib" title="Toggle Dark / Light Theme (Ctrl+Shift+D)"><i data-ic="moon"></i></button>
  <button id="about-btn" class="ib" title="About Redline Pro (Version 1.0.0)"><i data-ic="info"></i></button>
- <nav id="modes"><button data-v="compare" class="on" title="Engineering Drawing Compare & CAM Review Workspace (Ctrl+1)"><i data-ic="tabCompare"></i><span>Compare</span></button><button data-v="edit" title="PDF Markup, Redaction, Typography & Page Studio (Ctrl+2)"><i data-ic="pdfStudio"></i><span>PDF Studio</span></button></nav>
+ <nav id="modes" hidden><button data-v="compare" class="on"><i data-ic="tabCompare"></i><span>Compare</span></button></nav>
 </div>
 
 <div id="view-compare" class="view">
@@ -60,11 +60,11 @@
         <span>Overlay Rev A vs Rev B with sub-pixel auto-align, 60 FPS split curtain &amp; IPC DFM checks</span>
        </div>
       </button>
-      <button type="button" class="rp-hero-card card-studio" id="rp-card-pdf-studio" title="Switch to PDF Redline Studio for Markup, Measurement, E-Sign &amp; Redaction">
-       <div class="rp-hero-card-ic"><i data-ic="pdfStudio"></i></div>
+      <button type="button" class="rp-hero-card card-studio" id="rp-card-pdf-studio" title="Open CAM350 PCB Gerber, Excellon Drill &amp; AutoCAD DXF Workbench">
+       <div class="rp-hero-card-ic"><i data-ic="pcbCam"></i></div>
        <div class="rp-hero-card-body">
-        <b>PDF Redline Studio (Markup, Measurement, E-Sign, Redaction)</b>
-        <span>Pen, Pin markers, smart eraser, revision clouds, callouts, 18+ fonts &amp; page assembly</span>
+        <b>CAM350 &amp; AutoCAD DXF Inspection Workbench</b>
+        <span>Gerber RS-274X, Excellon NC Drill, IPC-D-356 Netlist &amp; R12/R2000 ASCII DXF Layer Diff</span>
        </div>
       </button>
       <button type="button" class="rp-hero-card card-sample" id="rp-card-load-samples" title="Instant one-click demo schematic, PCB Gerber + Drill, or AutoCAD DXF">
@@ -564,11 +564,7 @@
     <b>Drop Slot B (Revised Drawing / CAM Layer)</b>
     <span>Revised PDF, Gerber RS-274X, Excellon Drill, or AutoCAD DXF</span>
    </div>
-   <div class="rp-drop-zone zone-edit" data-dropzone="edit">
-    <i data-ic="pdfStudio"></i>
-    <b>Or drop anywhere to open directly in PDF Studio</b>
-    <span>Markup, Measurement, E-Sign, Typography, Page Assembly &amp; Redaction</span>
-   </div>
+
   </div>
  </div>
 </div>

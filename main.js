@@ -10,6 +10,15 @@ const TD = process.env.REDLINE_TEST_DIR; // test hook: skip dialogs and write he
 const TESTING = !!(TD || process.env.REDLINE_SELFTEST);
 let win, force = false;
 
+// ---- Isolated Dual-Application Detection ("Redline Pro" vs "Redline Pro PDF Editor") ----
+function isPdfEditorMode(argv = process.argv) {
+  const exeName = path.basename(process.execPath || '');
+  if (/pdf[\s._-]*editor/i.test(exeName)) return true;
+  if (process.env.REDLINE_APP && /pdf[\s._-]*editor|editor/i.test(process.env.REDLINE_APP)) return true;
+  if (Array.isArray(argv) && argv.some(a => /^--(pdf-editor|editor|app=pdf-editor)$/i.test(String(a)))) return true;
+  return false;
+}
+
 // ---- MODULE 1: Global Main Process Crash & Unhandled Rejection Boundaries ----
 const diagnosticLog = [];
 function recordMainDiagnostic(kind, errOrReason) {
@@ -68,18 +77,25 @@ function ensureSaveExtension(filePath, defaultName, filters) {
 
 if (!TESTING && !app.requestSingleInstanceLock()) app.quit();
 app.on('second-instance', (e, argv) => {
-  if (!win) return; if (win.isMinimized()) win.restore(); win.focus();
+  if (!win) return;
+  if (win.isMinimized()) win.restore();
+  win.focus();
   handleArgs(argv);
 });
-// Explorer right-click "Compare with Redline": first file goes to A, the next one (within 5 s) to B
+
+// Explorer right-click: routes files to the launched application instance
 let cmpN = 0, cmpT = null;
 function handleArgs(argv) {
   const files = (argv || []).slice(1)
+    .filter(a => typeof a === 'string' && !a.startsWith('--'))
     .map(a => sanitizeFilePath(a))
     .filter(a => a && /\.(pdf|dxf|gbr|ger|art|top|bot|gtl|gbl|gbs|gts|gto|gbo|gtp|gbp|gko|gm1|drl|xln|ipc|d356|net|redline|png|jpe?g|webp|bmp)$/i.test(a) && fs.existsSync(a));
   if (!files.length) return;
-  if ((argv || []).includes('--compare')) files.forEach(f => { sendOpen(f, cmpN % 2 ? 'B' : 'A'); cmpN++; clearTimeout(cmpT); cmpT = setTimeout(() => cmpN = 0, 5000); });
-  else files.forEach(f => sendOpen(f));
+  if (isPdfEditorMode(argv)) {
+    files.forEach(f => sendOpen(f));
+  } else {
+    files.forEach(f => { sendOpen(f, cmpN % 2 ? 'B' : 'A'); cmpN++; clearTimeout(cmpT); cmpT = setTimeout(() => cmpN = 0, 5000); });
+  }
 }
 
 function sendOpen(rawFile, slot) {
@@ -118,11 +134,17 @@ function create() {
     }
   ]);
   Menu.setApplicationMenu(editMenu);
+
+  const isEditor = isPdfEditorMode(process.argv);
+  const htmlFile = isEditor ? 'pdf-editor.html' : 'index.html';
+  const winTitle = isEditor ? 'Redline Pro PDF Editor' : 'Redline Pro';
+  const iconFile = isEditor ? 'pdf-editor-icon.png' : 'icon.png';
+
   win = new BrowserWindow({
     width: 1500, height: 920, minWidth: 980, minHeight: 600, show: false,
     autoHideMenuBar: true,
-    backgroundColor: nativeTheme.shouldUseDarkColors ? '#0b100e' : '#f2f5f3', title: 'Redline Pro',
-    icon: path.join(__dirname, 'build', 'icon.png'),
+    backgroundColor: nativeTheme.shouldUseDarkColors ? '#0b100e' : '#f2f5f3', title: winTitle,
+    icon: path.join(__dirname, 'build', iconFile),
     webPreferences: { contextIsolation: true, nodeIntegration: false, backgroundThrottling: false, preload: path.join(__dirname, 'preload.js'), spellcheck: false }
   });
   win.setMenuBarVisibility(false);
@@ -157,7 +179,7 @@ function create() {
     if (!p.isEditable) return;
     Menu.buildFromTemplate([{ role: 'undo' }, { role: 'redo' }, { type: 'separator' }, { role: 'cut' }, { role: 'copy' }, { role: 'paste' }, { type: 'separator' }, { role: 'selectAll' }]).popup({ window: win });
   });
-  win.loadFile(path.join(__dirname, 'index.html'));
+  win.loadFile(path.join(__dirname, htmlFile));
   win.webContents.once('did-finish-load', () => { if (win && !win.isDestroyed() && !win.isVisible()) win.show(); });
 }
 app.whenReady().then(create);
@@ -199,6 +221,7 @@ ipcMain.handle('save-many', async (e, { files }) => {
   for (const f of files) fs.writeFileSync(path.join(dir, f.name), Buffer.from(f.bytes));
   return dir;
 });
+ipcMain.handle('get-app-mode', () => isPdfEditorMode() ? 'pdf-editor' : 'compare');
 // ---- auto-save / crash recovery ----
 const recDir = () => path.join(app.getPath('userData'), 'recovery');
 function clearRecovery() { try { fs.rmSync(recDir(), { recursive: true, force: true }); } catch (e) {} }

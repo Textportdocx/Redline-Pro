@@ -128,9 +128,62 @@
           return true;
         }
         return false;
-      }
+      },
+      openPdfEditor: async payload => {
+        if (window.openPdfEditorApp) return window.openPdfEditorApp(payload, true);
+        return true;
+      },
+      openCompareApp: async payload => {
+        if (window.openCompareApp) return window.openCompareApp(payload, true);
+        return true;
+      },
+      getAppMode: async () => (typeof document !== 'undefined' && document.body && document.body.dataset.app) || 'compare',
+      isTesting: false
     };
   }
+
+
+  // ---- Dual-Application Helpers: Redline Pro <-> Redline Pro PDF Editor ----
+  window.getActiveAppTitle = function () {
+    const isEd = typeof document !== 'undefined' && document.body && (document.body.dataset.view === 'edit' || document.body.dataset.app === 'pdf-editor');
+    return isEd ? 'Redline Pro PDF Editor' : 'Redline Pro';
+  };
+
+  window.openPdfEditorApp = async function (payload = null, fromFallback = false) {
+    if (!fromFallback && window.native && typeof window.native.openPdfEditor === 'function' && !window.native.isTesting) {
+      try {
+        await window.native.openPdfEditor(payload);
+        if (typeof document !== 'undefined' && document.body && document.body.dataset.app === 'pdf-editor' && typeof window.setView === 'function') {
+          window.setView('edit');
+        }
+        return true;
+      } catch (e) {}
+    }
+    if (typeof window.setView === 'function') window.setView('edit');
+    if (payload && payload.bytes && window.RE && typeof window.RE.openBytes === 'function') {
+      const u = payload.bytes instanceof Uint8Array ? payload.bytes : new Uint8Array(payload.bytes);
+      await window.RE.openBytes(u, payload.name || 'document.pdf', payload.path || '');
+    }
+    return true;
+  };
+
+  window.openCompareApp = async function (payload = null, fromFallback = false) {
+    if (!fromFallback && window.native && typeof window.native.openCompareApp === 'function' && !window.native.isTesting) {
+      try {
+        await window.native.openCompareApp(payload);
+        if (typeof document !== 'undefined' && document.body && document.body.dataset.app === 'compare' && typeof window.setView === 'function') {
+          window.setView('compare');
+        }
+        return true;
+      } catch (e) {}
+    }
+    if (typeof window.setView === 'function') window.setView('compare');
+    if (payload && payload.bytes && typeof window.compareLoadBytes === 'function') {
+      const u = payload.bytes instanceof Uint8Array ? payload.bytes : new Uint8Array(payload.bytes);
+      await window.compareLoadBytes(payload.slot || 'A', u, payload.name || 'document.pdf', payload.path || '');
+    }
+    return true;
+  };
 
   window.openExternalUrl = u => {
     const target = /^https?:\/\//i.test(String(u || '')) ? u : 'https://redline.textportdocx.in';

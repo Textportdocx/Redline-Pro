@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><title>Redline Pro PDF Editor - Enterprise PDF Markup, Typography &amp; Page Studio | Redline Studio</title><link rel="icon" href="build/pdf-editor-icon.png" type="image/png"><link rel="stylesheet" href="style.css"></head>
+<body data-view="edit" data-app="pdf-editor">
+<div id="busy" hidden></div>
+<div id="top">
+ <div class="brand" id="brand-about" title="About Redline Pro PDF Editor 1.0.0 — Click for capabilities &amp; system info" style="cursor:pointer"><img src="build/pdf-editor-logo.png" alt="Redline Pro PDF Editor" class="rp-img"><b id="rp-brand-name">Redline Pro PDF Editor</b><small class="rp-pub">by Redline Studio</small></div>
+ <nav id="menubar"></nav>
+ <span id="docname"></span>
+ <span class="grow"></span>
+ <button id="theme" class="ib" title="Toggle Dark / Light Theme (Ctrl+Shift+D)"><i data-ic="moon"></i></button>
+ <button id="about-btn" class="ib" title="About Redline Pro PDF Editor (Version 1.0.0)"><i data-ic="info"></i></button>
+ <nav id="modes" hidden><button data-v="edit" class="on"><i data-ic="pdfStudio"></i><span>Redline Pro PDF Editor</span></button></nav>
+</div>
+
+<div id="view-compare" class="view" hidden data-app-hidden="true">
+ <div class="ribbon">
+  <div class="grp"><div class="row">
+   <button class="tb A" id="openA"><i data-ic="openA"></i><span>Open A</span></button>
+   <button class="tb B" id="openB"><i data-ic="openB"></i><span>Open B</span></button>
+   <button class="tb" id="swap" title="Swap A and B"><i data-ic="swap"></i><span>Swap</span></button></div><div class="cap">Files</div></div>
+  <div class="grp"><div class="row col">
+   <label class="f">View <select id="mode"><option value="paper">Overlay on paper</option><option value="over">Overlay dark (CAM)</option><option value="diff">Differences only</option><option value="side">Side by side</option><option value="blink">Blink A / B</option><option value="A">A only</option><option value="B">B only</option></select></label>
+   <label class="f">Quality <select id="dpi"><option value="150">150 dpi (fast)</option><option value="200">200 dpi</option><option value="300" selected>300 dpi</option><option value="400">400 dpi</option><option value="600">600 dpi</option></select></label></div><div class="cap">View</div></div>
+  <div class="grp"><div class="row col">
+   <label class="f">Tolerance <input type="range" id="tol" min="0" max="150" value="40"></label>
+   <div class="row"><label class="f">Min size <input type="number" id="minpx" value="2" min="1" max="50"></label>
+   <label class="f" title="Ignore differences smaller than this many pixels of movement">Edge <input type="number" id="edge" value="1" min="0" max="4"></label></div></div><div class="cap">Detection</div></div>
+  <div class="grp"><div class="row">
+   <label class="f">Shift B <input type="number" id="dx" value="0"> <input type="number" id="dy" value="0"></label>
+   <button class="tb" id="align"><i data-ic="align"></i><span>Auto-align</span></button></div><div class="cap">Alignment</div></div>
+  <div class="grp"><div class="row col">
+   <div class="row"><label class="chk"><input type="checkbox" id="lA" checked> A only</label><label class="chk"><input type="checkbox" id="lB" checked> B only</label></div>
+   <div class="row"><label class="chk"><input type="checkbox" id="lC" checked> Common</label><label class="chk"><input type="checkbox" id="lM" checked> Markers</label></div></div><div class="cap">Layers</div></div>
+  <div class="grp"><div class="row">
+   <button class="tb" id="ignBtn" title="Drag on the drawing to ignore an area (title block, date...)"><i data-ic="ignore"></i><span>Ignore area</span></button><label class="chk" title="Tick: the area applies to every page. Untick: only the page you draw it on"><input type="checkbox" id="ignAll" checked> All pages</label></div><div class="cap">Filter</div></div>
+  <span class="grow"></span>
+  <div class="grp"><div class="row">
+   <button class="tb" id="png"><i data-ic="png"></i><span>Image</span></button>
+   <button class="tb" id="csv"><i data-ic="csv"></i><span>List</span></button>
+   <button class="tb" id="report"><i data-ic="report"></i><span>Report</span></button></div><div class="cap">Export</div></div>
+ </div>
+ <div id="pages"></div>
+ <main>
+  <div id="vp"><div id="stage"><canvas id="cv" width="0" height="0"></canvas><canvas id="lv" width="0" height="0"></canvas><canvas id="mk" width="0" height="0"></canvas></div>
+   <div id="empty">
+    <div class="rp-empty-hero rp-studio-launchpad">
+     <div class="rp-launchpad-badge"><i data-ic="sparkle"></i><span>A/B DRAWING, SCHEMATIC &amp; CAM350 VERIFICATION ENGINE</span></div>
+     <img src="build/pdf-editor-logo.png" alt="Redline Pro" class="rp-img">
+     <div class="rp-launchpad-title">Open Base (Rev A) &amp; Revised (Rev B) Drawings or CAM Layers</div>
+     <small>Drop PDF schematics, Gerber RS-274X, Excellon NC Drill, IPC-D-356 netlists, AutoCAD DXF, or .redline sessions. Sub-pixel auto-align, 60 FPS split curtain, and IPC Class 1/2/3 DFM checks.</small>
+     <div class="rp-sample-actions">
+      <button id="rp-sample-schematic-btn" class="rp-sample-btn rp-btn-hero-primary" title="Dynamically loads 2-page vector schematic (FUSE 10A vs 16A, R1, C1, C2) and auto-runs diffs"><i data-ic="zap"></i><span>Load Sample Schematic (Rev A vs Rev B)</span></button>
+      <button id="rp-sample-gerber-btn" class="rp-sample-btn" title="Loads synthetic PCB Gerber copper layout + Excellon drill file with 4-mil clearance spacing violation"><i data-ic="pcbCam"></i><span>Load Sample PCB Gerber + IPC-D-356</span></button>
+     </div>
+     <div class="rp-primary-launch-cards" role="region" aria-label="Quick Launch Workspace Cards">
+      <button type="button" class="rp-hero-card card-cmp" id="rp-card-compare-drawings" title="Open Base (Rev A) and Revised (Rev B) PDFs, AutoCAD DXF, or Gerber Layers">
+       <div class="rp-hero-card-ic"><i data-ic="tabCompare"></i></div>
+       <div class="rp-hero-card-body">
+        <b>Compare Drawings (PDF, DXF, or Gerber A/B)</b>
+        <span>Overlay Rev A vs Rev B with sub-pixel auto-align, 60 FPS split curtain &amp; IPC DFM checks</span>
+       </div>
+      </button>
+      <button type="button" class="rp-hero-card card-studio" id="rp-card-pdf-studio" title="Switch to PDF Redline Studio for Markup, Measurement, E-Sign &amp; Redaction">
+       <div class="rp-hero-card-ic"><i data-ic="pdfStudio"></i></div>
+       <div class="rp-hero-card-body">
+        <b>PDF Redline Studio (Markup, Measurement, E-Sign, Redaction)</b>
+        <span>Pen, Pin markers, smart eraser, revision clouds, callouts, 18+ fonts &amp; page assembly</span>
+       </div>
+      </button>
+      <button type="button" class="rp-hero-card card-sample" id="rp-card-load-samples" title="Instant one-click demo schematic, PCB Gerber + Drill, or AutoCAD DXF">
+       <div class="rp-hero-card-ic"><i data-ic="zap"></i></div>
+       <div class="rp-hero-card-body">
+        <b>Load Sample Drawings (Instant one-click demo schematic / CAM board)</b>
+        <span>Test Redline Pro in 3 seconds with synthetic Rev A/B vector schematics or PCB CAM layers</span>
+       </div>
+      </button>
+     </div>
+     <div class="rp-launchpad-grid">
+      <button type="button" class="rp-launch-card" id="rp-cmp-launch-ab" title="Select Base (Rev A) and Revised (Rev B) files">
+       <i data-ic="tabCompare"></i>
+       <div><b>Open Base (A) &amp; New (B)</b><span>Compare two PDFs or CAM layers</span></div>
+      </button>
+      <button type="button" class="rp-launch-card" id="rp-cmp-launch-cam350" title="Open CAM350 Workbench (D-Codes, T-Code Drills, IPC-D-356 &amp; DFM Rules)">
+       <i data-ic="pcbDual"></i>
+       <div><b>CAM350 Workbench</b><span>Apertures, Drills &amp; IPC-D-356</span></div>
+      </button>
+      <button type="button" class="rp-launch-card" id="rp-cmp-launch-dxf" title="Import AutoCAD DXF drawing into Compare">
+       <i data-ic="dxfIn"></i>
+       <div><b>Import AutoCAD DXF</b><span>Load R12/2000 ASCII .dxf</span></div>
+      </button>
+      <button type="button" class="rp-launch-card" id="rp-cmp-launch-batch" title="Compare two entire folders of drawings automatically">
+       <i data-ic="open"></i>
+       <div><b>Batch Folder Compare</b><span>Compare two drawing directories</span></div>
+      </button>
+     </div>
+    </div>
+   </div>
+   <div id="c-floating-hud" class="rp-floating-hud rp-cmp-hud" hidden>
+    <button type="button" class="rp-hud-btn" id="cHudPrevD" title="Previous Difference (P / Shift+F3)"><i data-ic="prev"></i></button>
+    <span class="rp-hud-page-pill" id="cHudDiffLabel" title="Click to Jump to Next Difference (N)">0 Diffs</span>
+    <button type="button" class="rp-hud-btn" id="cHudNextD" title="Next Difference (N / F3)"><i data-ic="next"></i></button>
+    <span class="rp-hud-div"></span>
+    <button type="button" class="rp-hud-btn" id="cHudCurtain" title="Toggle 60 FPS Split Curtain (C)"><i data-ic="curtain"></i></button>
+    <button type="button" class="rp-hud-btn" id="cHudBlink" title="Instant Blink Toggle A / B (Space)"><i data-ic="swap"></i></button>
+    <button type="button" class="rp-hud-btn" id="cHudLoupe" title="Toggle 4x Magnifier Loupe (L)"><i data-ic="loupe"></i></button>
+    <button type="button" class="rp-hud-btn" id="cHudCross" title="Toggle Precision Crosshair (X)"><i data-ic="crosshair"></i></button>
+    <span class="rp-hud-div"></span>
+    <button type="button" class="rp-hud-btn" id="cHudZo" title="Zoom Out (Ctrl+-)"><i data-ic="zoomout"></i></button>
+    <span class="rp-hud-page-pill" id="cHudZoomLabel" title="Click to Fit Drawing to Window (F)">100%</span>
+    <button type="button" class="rp-hud-btn" id="cHudZi" title="Zoom In (Ctrl+=)"><i data-ic="zoomin"></i></button>
+    <button type="button" class="rp-hud-btn" id="cHudFit" title="Fit &amp; Re-Sharpen Vectors (F)"><i data-ic="fit"></i></button>
+   </div>
+  </div>
+  <aside>
+   <div class="tabs"><button data-t="d" class="on" title="Pixel & Vector Difference Regions"><i data-ic="align"></i><span>Differences</span></button><button data-t="t" title="Extracted Page Text Word Diff"><i data-ic="textDiff"></i><span>Text</span></button></div>
+   <div id="sum"></div>
+   <div class="navrow"><button id="prevD" class="sm"><i data-ic="prev"></i>Previous</button><button id="nextD" class="sm">Next<i data-ic="next"></i></button><button id="markAll" class="sm" title="Tick every difference on this page as reviewed"><i data-ic="check"></i>All</button></div>
+   <div id="list"></div><div id="text" hidden></div>
+  </aside>
+ </main>
+ <footer><span id="st">Ready</span><span id="pos"></span></footer>
+</div>
+
+<div id="view-edit" class="view">
+ <div class="rp-ribbon-container rp-edit-studio-header">
+  <div class="rp-ribbon-tabs" id="edit-ribbon-tabs">
+   <button class="rp-tab-btn active" data-etab="home" title="Home Tab: File, Clipboard, Font &amp; Paragraph, Direct PDF Typing &amp; Quick Draw"><i data-ic="fontFile"></i><span>Home</span></button>
+   <button class="rp-tab-btn" data-etab="draw" title="Freehand Pen, Highlighter, Eraser, Shapes, Revision Clouds, Callouts, Pins, Stamps &amp; Signatures"><i data-ic="tabMarkup"></i><span>Insert &amp; Draw</span></button>
+   <button class="rp-tab-btn" data-etab="review" title="Sticky Notes, Text Highlights, In-Place PDF Text Edit, Search, Distance &amp; Area Takeoffs"><i data-ic="note"></i><span>Review &amp; Measure</span></button>
+   <button class="rp-tab-btn" data-etab="pages" title="Rotate, Insert Blank/PDF, Duplicate, Delete, Crop, Resize (A4/A3/ANSI), Extract &amp; Reorder Pages"><i data-ic="pageSize"></i><span>Page Layout</span></button>
+   <button class="rp-tab-btn" data-etab="doc" title="Merge PDFs, Split PDF, Images to PDF, Watermark, Header/Footer, Page Numbers, Bates #, Flatten &amp; Optimize"><i data-ic="merge"></i><span>Document &amp; Export</span></button>
+   <button class="rp-tab-btn" data-etab="all" title="Show All PDF Studio Sets Together"><i data-ic="allTools"></i><span>All Sets</span></button>
+   <span class="grow"></span>
+   <div class="rp-edit-quickbar">
+    <button class="rp-btn-sm on" id="eThumbBtn" title="Toggle Left Page Thumbnails Rail"><i data-ic="sidebarLeft"></i><span>Pages Rail</span></button>
+    <button class="rp-btn-sm" id="eNightBtn" title="Toggle Dark Blueprint / Night Page Inversion (Ctrl+Shift+N)"><i data-ic="moon"></i><span>Blueprint Mode</span></button>
+    <button class="rp-btn-sm" id="ePanelBtn" title="Toggle Comments Drawer (Optional)"><i data-ic="note"></i><span>Comments</span></button>
+   </div>
+  </div>
+
+  <div class="ribbon rp-edit-ribbon">
+   <!-- SET 1: FILE & CLIPBOARD (Visible on all tabs) -->
+   <div class="grp" data-egrp="file"><div class="row">
+    <button class="tb" id="eOpen" title="Open PDF Document (Ctrl+O)"><i data-ic="open"></i><span>Open</span></button>
+    <button class="tb" id="eSave" title="Save PDF (Ctrl+S)"><i data-ic="save"></i><span>Save</span></button>
+    <button class="tb" id="eSaveAs" title="Save As New PDF (Ctrl+Shift+S)"><i data-ic="saveas"></i><span>Save As</span></button>
+    <button class="tb" data-op="print" title="Print PDF Document (Ctrl+P)"><i data-ic="print"></i><span>Print</span></button>
+    <button class="tb" id="eUndo" title="Undo Last Action (Ctrl+Z)"><i data-ic="undo"></i><span>Undo</span></button>
+    <button class="tb" id="eRedo" title="Redo Action (Ctrl+Y)"><i data-ic="redo"></i><span>Redo</span></button>
+   </div><div class="cap">File &amp; History</div></div>
+
+   <!-- SET 2: CURSOR & DIRECT PDF TYPING (Home, Review, All) -->
+   <div class="grp" data-egrp="home review"><div class="row" id="eTextCursorTools">
+    <button class="tb on" data-t="select" title="Select, Move, Resize or Double-Click Any Text to Edit on Page (V)"><i data-ic="select"></i><span>Select</span></button>
+    <button class="tb" data-t="hand" title="Hand Tool — Drag to Pan Page (H)"><i data-ic="hand"></i><span>Pan</span></button>
+    <button class="tb" data-t="text" title="Type Text Directly on PDF Page — Click Anywhere &amp; Start Typing (T)"><i data-ic="text"></i><span>Type Text</span></button>
+    <button class="tb" data-t="edittext" title="Edit Existing PDF Text In-Place Directly on Page (E)"><i data-ic="edittext"></i><span>Edit PDF Text</span></button>
+    <button class="tb" id="eFind" title="Find &amp; Highlight Text in Document (Ctrl+F)"><i data-ic="search"></i><span>Find</span></button>
+   </div><div class="cap">Cursor &amp; Direct Typing</div></div>
+
+   <!-- SET 3: MS OFFICE FONT & PARAGRAPH SET (Always Outside on Home, Draw, Review, All) -->
+   <div class="grp" data-egrp="home draw review" id="eFontSet"><div class="row col" style="gap:4px">
+    <div class="row" id="eRowFont" style="gap:4px">
+     <select id="eFontFam" style="width:155px;height:24px;font-weight:600;padding-right:20px" title="Font Family (18+ Built-In &amp; Custom Loaded Fonts)">
+      <optgroup label="Sans-Serif (Modern &amp; UI)">
+       <option value="Helvetica" selected>Helvetica</option>
+       <option value="Arial">Arial</option>
+       <option value="Segoe UI">Segoe UI</option>
+       <option value="Calibri">Calibri</option>
+       <option value="Verdana">Verdana</option>
+       <option value="Tahoma">Tahoma</option>
+       <option value="Trebuchet MS">Trebuchet MS</option>
+       <option value="Impact">Impact</option>
+      </optgroup>
+      <optgroup label="Serif (Formal &amp; Editorial)">
+       <option value="Times">Times New Roman</option>
+       <option value="Georgia">Georgia</option>
+       <option value="Garamond">Garamond</option>
+       <option value="Cambria">Cambria</option>
+       <option value="Palatino">Palatino Linotype</option>
+      </optgroup>
+      <optgroup label="Monospace (CAD &amp; Code)">
+       <option value="Courier">Courier New</option>
+       <option value="Consolas">Consolas Mono</option>
+       <option value="Lucida Console">Lucida Console</option>
+      </optgroup>
+      <optgroup label="Script &amp; Calligraphic">
+       <option value="Brush Script MT">Brush Script</option>
+       <option value="Comic Sans MS">Comic Sans</option>
+      </optgroup>
+      <optgroup label="Custom Loaded Fonts" id="eCustomFontGroup" hidden></optgroup>
+     </select>
+     <select id="eFontSizePreset" style="width:62px;height:24px;font-weight:600;padding-right:16px" title="Font Size (pt)">
+      <option value="8">8 pt</option>
+      <option value="9">9 pt</option>
+      <option value="10">10 pt</option>
+      <option value="11">11 pt</option>
+      <option value="12">12 pt</option>
+      <option value="14" selected>14 pt</option>
+      <option value="16">16 pt</option>
+      <option value="18">18 pt</option>
+      <option value="20">20 pt</option>
+      <option value="22">22 pt</option>
+      <option value="24">24 pt</option>
+      <option value="26">26 pt</option>
+      <option value="28">28 pt</option>
+      <option value="36">36 pt</option>
+      <option value="48">48 pt</option>
+      <option value="72">72 pt</option>
+      <option value="custom">Custom...</option>
+     </select>
+     <input type="hidden" id="eFontSize" value="14">
+     <button type="button" class="rp-fmt-btn" id="eFontInc" title="Increase Font Size (A▲)"><b style="font-size:12px;line-height:1">A</b><span style="font-size:9px">▲</span></button>
+     <button type="button" class="rp-fmt-btn" id="eFontDec" title="Decrease Font Size (A▼)"><b style="font-size:10px;line-height:1">A</b><span style="font-size:8px">▼</span></button>
+     <button type="button" class="rp-fmt-btn" id="eLoadFontBtn" title="Load Custom Font File (.ttf, .otf, .woff)"><i data-ic="fontFile"></i><span>+Font</span></button>
+    </div>
+    <div class="row" id="eRowTextFmt" style="gap:4px">
+     <button type="button" class="rp-fmt-btn" id="eBold" title="Bold (B)"><i data-ic="bold"></i></button>
+     <button type="button" class="rp-fmt-btn" id="eItalic" title="Italic (I)"><i data-ic="italic"></i></button>
+     <button type="button" class="rp-fmt-btn" id="eUnderline" title="Underline (U)"><i data-ic="underline"></i></button>
+     <button type="button" class="rp-fmt-btn" id="eStrike" title="Strikethrough (S)"><i data-ic="strike"></i></button>
+     <span class="rp-hud-div" style="height:14px"></span>
+     <button type="button" class="rp-fmt-btn on" id="eAlignL" data-align="left" title="Align Text Left"><i data-ic="alignLeft"></i></button>
+     <button type="button" class="rp-fmt-btn" id="eAlignC" data-align="center" title="Align Text Center"><i data-ic="alignCenter"></i></button>
+     <button type="button" class="rp-fmt-btn" id="eAlignR" data-align="right" title="Align Text Right"><i data-ic="alignRight"></i></button>
+     <span class="rp-hud-div" style="height:14px"></span>
+     <label class="f" title="Font / Text Colour" style="font-size:11px;gap:3px">Color <input type="color" id="eTextColor" value="#111827" style="width:22px;height:20px"></label>
+     <label class="chk" title="Fill Text Box Background"><input type="checkbox" id="eTextBg"> Box Fill</label>
+     <input type="color" id="eBgColor" value="#fffbeb" title="Text Box Background / Shape Fill Colour" style="width:22px;height:20px">
+    </div>
+   </div><div class="cap">Font &amp; Paragraph</div></div>
+
+   <!-- SET 4: PENS, SHAPES & MARKUP TOOLS (Home & Insert/Draw) -->
+   <div class="grp" data-egrp="home draw"><div class="row" id="tools">
+    <button class="tb" data-t="draw" title="Freehand Redline Pen — Opens Pen Width &amp; Colour Options (P)"><i data-ic="pen"></i><span>Pen</span></button>
+    <button class="tb" data-t="eraser" title="Eraser — Opens Eraser Mode &amp; Size Options (Z)"><i data-ic="eraser"></i><span>Eraser</span></button>
+    <button class="tb" data-t="rect" title="Rectangle Box (B)"><i data-ic="box"></i><span>Box</span></button>
+    <button class="tb" data-t="circle" title="Circle / Ellipse Shape (O)"><i data-ic="circle"></i><span>Circle</span></button>
+    <button class="tb" data-t="line" title="Straight Vector Line (L)"><i data-ic="line"></i><span>Line</span></button>
+    <button class="tb" data-t="arrow" title="Directional Vector Arrow (A)"><i data-ic="arrow"></i><span>Arrow</span></button>
+    <button class="tb" data-t="poly" title="Multi-Segment Polygon / Polyline (Y)"><i data-ic="polygon"></i><span>Polygon</span></button>
+    <button class="tb" data-t="cloud" title="ANSI/ISO Scalloped Revision Cloud (C)"><i data-ic="revCloud"></i><span>Rev Cloud</span></button>
+    <button class="tb" data-t="leader" title="Engineering Leader Callout Arrow (D)"><i data-ic="leader"></i><span>Callout</span></button>
+   </div><div class="cap">Pen &amp; Shapes</div></div>
+
+   <!-- SET 5: PINS, STAMPS, SIGN & REDACT (Home & Insert/Draw) -->
+   <div class="grp" data-egrp="home draw"><div class="row" id="eStampTools">
+    <button class="tb" data-t="pin" title="Place Numbered Inspection Pin Badge (Q)"><i data-ic="pin"></i><span>Pin</span></button>
+    <button class="tb" data-t="checkmk" title="Place Green Checkmark Tick (✓)"><i data-ic="checkMark"></i><span>Check ✓</span></button>
+    <button class="tb" data-t="crossmk" title="Place Red Cross Mark (✗)"><i data-ic="crossMark"></i><span>Cross ✗</span></button>
+    <button class="tb" data-t="image" title="Insert Image or Logo Overlay (I)"><i data-ic="image"></i><span>Image</span></button>
+    <button class="tb" data-t="sign" title="Draw Handwritten Signature (G)"><i data-ic="sign"></i><span>Sign</span></button>
+    <button class="tb" data-t="stamp" title="Place QA Approval Stamp (S)"><i data-ic="stamp"></i><span>Stamp</span></button>
+    <button class="tb" data-t="whiteout" title="Whiteout Cover Mask (W)"><i data-ic="whiteout"></i><span>Whiteout</span></button>
+    <button class="tb" data-t="redact" title="Permanent Black Security Redaction (X)"><i data-ic="redact"></i><span>Redact</span></button>
+   </div><div class="cap">Pins, Sign &amp; Stamps</div></div>
+
+   <!-- CONTEXTUAL TOOL OPTIONS SET (ONLY shown when Pen, Shape, Eraser, or Pin is active!) -->
+   <div class="grp rp-contextual-tool-set" data-egrp="style" id="eStyleDock" hidden><div class="row" style="gap:8px">
+    <div class="row col" id="eCtxControls" style="gap:4px">
+     <div class="row" id="eRowSize" style="gap:4px">
+      <span id="eSizeLbl" style="font-size:11px;font-weight:600;color:var(--acc);min-width:62px">Pen Width</span>
+      <button type="button" class="rp-fmt-btn" id="eStrokeDec" title="Decrease Width / Size"><b>−</b></button>
+      <input type="number" id="eSize" value="3" min="1" max="200" title="Active Tool Width / Size (px)" style="width:44px">
+      <button type="button" class="rp-fmt-btn" id="eStrokeInc" title="Increase Width / Size"><b>+</b></button>
+      <div class="row" id="ePenPresets" style="gap:2px" title="Quick Pen &amp; Shape Width Presets">
+       <button type="button" class="rp-fmt-btn rp-sz-pre" data-sz="1" title="1px Fine">1px</button>
+       <button type="button" class="rp-fmt-btn rp-sz-pre" data-sz="2" title="2px Thin">2px</button>
+       <button type="button" class="rp-fmt-btn rp-sz-pre on" data-sz="3" title="3px Standard Pen">3px</button>
+       <button type="button" class="rp-fmt-btn rp-sz-pre" data-sz="5" title="5px Medium">5px</button>
+       <button type="button" class="rp-fmt-btn rp-sz-pre" data-sz="8" title="8px Bold Marker">8px</button>
+       <button type="button" class="rp-fmt-btn rp-sz-pre" data-sz="14" title="14px Highlighter">14px</button>
+      </div>
+      <div class="row" id="eEraserOpts" hidden style="gap:3px" title="Eraser Mode &amp; Radius Presets">
+       <select id="eEraserMode" style="max-width:105px" title="Choose Whole Markup vs Brush Radius Eraser">
+        <option value="object" selected>Whole Markup</option>
+        <option value="brush">Brush Radius</option>
+       </select>
+       <button type="button" class="rp-fmt-btn rp-er-pre" data-er="8">8px</button>
+       <button type="button" class="rp-fmt-btn rp-er-pre on" data-er="18">18px</button>
+       <button type="button" class="rp-fmt-btn rp-er-pre" data-er="36">36px</button>
+       <button type="button" class="rp-fmt-btn rp-er-pre" data-er="64">64px</button>
+       <button type="button" class="rp-fmt-btn" id="eErasePageBtn" title="Clear All Markups on Current Page"><i data-ic="trash"></i><span>Clear Page</span></button>
+      </div>
+      <div class="row" id="ePinOpts" hidden style="gap:3px" title="Pin &amp; Marker Badge Size Presets">
+       <button type="button" class="rp-fmt-btn rp-pin-pre" data-psz="18">S (18)</button>
+       <button type="button" class="rp-fmt-btn rp-pin-pre on" data-psz="24">M (24)</button>
+       <button type="button" class="rp-fmt-btn rp-pin-pre" data-psz="32">L (32)</button>
+       <button type="button" class="rp-fmt-btn rp-pin-pre" data-psz="42">XL (42)</button>
+      </div>
+     </div>
+     <div class="row" id="eColorStrokeCol" style="gap:6px">
+      <input type="color" id="eColor" value="#e11d48" title="Active Pen / Shape / Pin Colour" style="width:24px;height:20px">
+      <div class="rp-swatches" id="eSwatches" title="Quick Redline Colours">
+       <button type="button" class="rp-swatch on" data-col="#e11d48" style="background:#e11d48" title="Crimson"></button>
+       <button type="button" class="rp-swatch" data-col="#2563eb" style="background:#2563eb" title="Cobalt"></button>
+       <button type="button" class="rp-swatch" data-col="#059669" style="background:#059669" title="Emerald"></button>
+       <button type="button" class="rp-swatch" data-col="#d97706" style="background:#d97706" title="Amber"></button>
+       <button type="button" class="rp-swatch" data-col="#7c3aed" style="background:#7c3aed" title="Violet"></button>
+       <button type="button" class="rp-swatch" data-col="#111827" style="background:#111827" title="Black"></button>
+      </div>
+      <label class="f" title="Opacity %">Alpha <input type="number" id="eOp" value="100" min="10" max="100" style="width:42px">%</label>
+      <label class="f" id="eDashWrap" title="Line Dash Pattern"><select id="eDash" style="max-width:74px"><option value="solid">Solid</option><option value="dashed">Dashed</option><option value="dotted">Dotted</option></select></label>
+      <label class="chk" id="eFillWrap" title="Fill Shape Interior"><input type="checkbox" id="eFill"> Fill</label>
+     </div>
+    </div>
+   </div><div class="cap" id="eStyleCap">Active Tool Options</div></div>
+
+   <!-- REVIEW & MEASURE SETS (Review Tab & All) -->
+   <div class="grp" data-egrp="review" hidden><div class="row" id="ctools">
+    <button class="tb" data-t="cnote" title="Add Sticky Note Comment (N)"><i data-ic="note"></i><span>Note</span></button>
+    <button class="tb" data-t="chl" title="Highlight Text or Area (H)"><i data-ic="highlight"></i><span>Highlight</span></button>
+    <button class="tb" data-t="cul" title="Underline Text (U)"><i data-ic="underline"></i><span>Underline</span></button>
+    <button class="tb" data-t="cst" title="Strikeout Text (K)"><i data-ic="strike"></i><span>Strikeout</span></button>
+   </div><div class="cap">Review Notes &amp; Highlights</div></div>
+
+   <div class="grp" data-egrp="review" hidden><div class="row" id="mtools">
+    <button class="tb" data-t="measure" title="Measure Point-to-Point Distance (M)"><i data-ic="ruler"></i><span>Distance</span></button>
+    <button class="tb" data-t="area" title="Measure Rectangular or Polygon Area &amp; Perimeter"><i data-ic="area"></i><span>Area</span></button>
+    <button class="tb" id="eClearMeasBtn" title="Clear All Measurements on Document"><i data-ic="trash"></i><span>Clear Meas</span></button>
+   </div><div class="cap">Calibrated Measure</div></div>
+
+
+
+   <!-- PAGE LAYOUT SETS (Page Layout Tab & All) -->
+   <div class="grp" data-egrp="pages" hidden><div class="row">
+    <button class="tb" data-op="rotL" title="Rotate Selected Page(s) Left 90° (Ctrl+Shift+R)"><i data-ic="rotL"></i><span>Rotate Left</span></button>
+    <button class="tb" data-op="rotR" title="Rotate Selected Page(s) Right 90° (Ctrl+R)"><i data-ic="rotR"></i><span>Rotate Right</span></button>
+    <button class="tb" data-op="rot180" title="Rotate Selected Page(s) 180°"><i data-ic="rot180"></i><span>Rotate 180°</span></button>
+   </div><div class="cap">Rotate Pages</div></div>
+
+   <div class="grp" data-egrp="pages" hidden><div class="row">
+    <button class="tb" data-op="blank" title="Insert Blank A4 Page After Current (Ctrl+Shift+B)"><i data-ic="blank"></i><span>Blank Page</span></button>
+    <button class="tb" data-op="insertpdf" title="Insert Another PDF After Current Page"><i data-ic="insertPdf"></i><span>Insert PDF</span></button>
+    <button class="tb" data-op="dup" title="Duplicate Selected Page(s) (Ctrl+D)"><i data-ic="copy"></i><span>Duplicate</span></button>
+    <button class="tb" data-op="del" title="Delete Selected Page(s) (Ctrl+Del)"><i data-ic="trash"></i><span>Delete Page</span></button>
+   </div><div class="cap">Insert &amp; Delete Pages</div></div>
+
+   <div class="grp" data-egrp="pages" hidden><div class="row">
+    <button class="tb" data-op="crop" title="Crop Page Margins (mm)"><i data-ic="crop"></i><span>Crop Margins</span></button>
+    <button class="tb" data-op="resize" title="Resize Page Dimensions (A4, A3, Letter, ANSI)"><i data-ic="pageSize"></i><span>Resize Page</span></button>
+    <button class="tb" data-op="extract" title="Extract Selected Page(s) to New PDF"><i data-ic="extract"></i><span>Extract PDF</span></button>
+    <button class="tb" data-op="reverse" title="Reverse Page Order"><i data-ic="reverse"></i><span>Reverse Order</span></button>
+   </div><div class="cap">Size, Crop &amp; Order</div></div>
+
+   <div class="grp" data-egrp="pages" hidden><div class="row">
+    <button class="tb sm1" data-op="selAll" title="Select All Pages (Ctrl+A)"><i data-ic="selectall"></i><span>All</span></button>
+    <button class="tb sm1" data-op="selOdd" title="Select Odd Pages"><i data-ic="oddPages"></i><span>Odd</span></button>
+    <button class="tb sm1" data-op="selEven" title="Select Even Pages"><i data-ic="evenPages"></i><span>Even</span></button>
+    <button class="tb sm1" data-op="selInv" title="Invert Page Selection"><i data-ic="swap"></i><span>Invert</span></button>
+    <button class="tb sm1" data-op="selNone" title="Deselect All Pages"><i data-ic="x"></i><span>None</span></button>
+   </div><div class="cap">Select Pages</div></div>
+
+   <!-- DOCUMENT & EXPORT SETS (Document Tab & All) -->
+   <div class="grp" data-egrp="doc" hidden><div class="row">
+    <button class="tb" data-op="merge" title="Merge Multiple PDF Files"><i data-ic="merge"></i><span>Merge PDFs</span></button>
+    <button class="tb" data-op="split" title="Split PDF by Ranges or Pages"><i data-ic="split"></i><span>Split PDF</span></button>
+    <button class="tb" data-op="images" title="Convert Images (PNG/JPG) to PDF"><i data-ic="images"></i><span>Images→PDF</span></button>
+   </div><div class="cap">Assemble &amp; Split</div></div>
+
+   <div class="grp" data-egrp="doc" hidden><div class="row">
+    <button class="tb" data-op="hf" title="Add Running Header &amp; Footer"><i data-ic="headerFooter"></i><span>Header/Footer</span></button>
+    <button class="tb" data-op="nums" title="Add Page Numbers"><i data-ic="pageNums"></i><span>Page Numbers</span></button>
+    <button class="tb" data-op="wm" title="Add Diagonal Watermark"><i data-ic="watermark"></i><span>Watermark</span></button>
+    <button class="tb" data-op="bates" title="Add Sequential Bates Numbering"><i data-ic="bates"></i><span>Bates #</span></button>
+   </div><div class="cap">Stamps &amp; Numbering</div></div>
+
+   <div class="grp" data-egrp="doc" hidden><div class="row">
+    <button class="tb" data-op="flatten" title="Flatten Annotations to Raster Images"><i data-ic="flatten"></i><span>Flatten PDF</span></button>
+    <button class="tb" data-op="opt" title="Optimize &amp; Compress PDF Structure"><i data-ic="zap"></i><span>Optimize</span></button>
+    <button class="tb" data-op="meta" title="Edit PDF Title, Author &amp; Keywords"><i data-ic="info"></i><span>Properties</span></button>
+    <button class="tb" data-op="png" title="Export Pages as High-Res PNG"><i data-ic="png"></i><span>Export PNG</span></button>
+    <button class="tb" data-op="text" title="Extract Full Document Text (.txt)"><i data-ic="textdoc"></i><span>Extract Text</span></button>
+   </div><div class="cap">Finalize &amp; Export</div></div>
+
+   <span class="grow"></span>
+   <!-- SET: PAGE & ZOOM (Always visible on right) -->
+   <div class="grp" data-egrp="nav"><div class="row">
+    <button class="tb sm1" id="ePrev" title="Previous Page (PageUp)"><i data-ic="prev"></i></button>
+    <label class="f"><input type="number" id="ePg" value="1" min="1"> / <span id="eN">0</span></label>
+    <button class="tb sm1" id="eNext" title="Next Page (PageDown)"><i data-ic="next"></i></button>
+    <button class="tb sm1" id="eZo" title="Zoom out (Ctrl+-)"><i data-ic="zoomout"></i></button>
+    <span id="eZoomBadge" class="rp-status-chip" title="Current Page Zoom Level (Click to Fit Page)" style="cursor:pointer">100%</span>
+    <button class="tb sm1" id="eZi" title="Zoom in (Ctrl+=)"><i data-ic="zoomin"></i></button>
+    <button class="tb sm1" id="eFit" title="Fit page to window (Ctrl+0)"><i data-ic="fit"></i></button>
+   </div><div class="cap">Page &amp; Zoom</div></div>
+  </div>
+ </div>
+ <div id="fbar" hidden><i data-ic="search"></i><input id="fq" placeholder="Find text across all pages..."><span id="fc"></span><button id="fPrev" class="sm" title="Previous Match (Shift+Enter)"><i data-ic="prev"></i></button><button id="fNext" class="sm" title="Next Match (Enter)"><i data-ic="next"></i></button><button id="fClose" class="sm" title="Close Search (Esc)"><i data-ic="x"></i></button></div>
+ <div id="etabs" hidden></div>
+ <div class="ebody">
+  <div id="thumbs" aria-label="Page Thumbnails"></div>
+  <div id="eview">
+   <div id="eempty">
+    <div class="rp-empty-hero rp-studio-launchpad">
+     <div class="rp-launchpad-badge"><i data-ic="sparkle"></i><span>REDLINE PRO PDF EDITOR &middot; MARKUP, TYPOGRAPHY &amp; PAGE STUDIO</span></div>
+     <img src="build/pdf-editor-logo.png" alt="Redline Pro" class="rp-img">
+     <div class="rp-launchpad-title">Redline Pro PDF Editor — Open or Drop a PDF Document</div>
+     <small>Ribbon sets, direct on-page PDF typing, 18+ built-in fonts + custom .TTF/.OTF loader, shapes, revision clouds, callouts, redaction, and multi-PDF assembly.</small>
+     <div class="rp-sample-actions">
+      <button type="button" id="rp-edit-open-btn" class="rp-sample-btn rp-btn-hero-primary" title="Open a PDF file from your computer (Ctrl+O)"><i data-ic="open"></i><span>Open PDF Document</span></button>
+      <button type="button" id="rp-edit-sample-btn" class="rp-sample-btn" title="Generate and open a 2-page sample vector engineering schematic in the Editor"><i data-ic="zap"></i><span>Load 2-Page Sample Schematic</span></button>
+     </div>
+     <div class="rp-launchpad-grid">
+      <button type="button" class="rp-launch-card" id="rp-launch-blank" title="Create a new blank A4 engineering PDF sheet immediately">
+       <i data-ic="blank"></i>
+       <div><b>New Blank Sheet</b><span>Create fresh A4 PDF canvas</span></div>
+      </button>
+      <button type="button" class="rp-launch-card" id="rp-launch-merge" title="Combine multiple PDF files into a single document">
+       <i data-ic="merge"></i>
+       <div><b>Merge PDFs</b><span>Combine multiple drawing sets</span></div>
+      </button>
+      <button type="button" class="rp-launch-card" id="rp-launch-images" title="Convert PNG/JPG images into a multi-page PDF">
+       <i data-ic="images"></i>
+       <div><b>Images to PDF</b><span>Convert scans &amp; snapshots</span></div>
+      </button>
+      <button type="button" class="rp-launch-card" id="rp-launch-split" title="Split PDF into separate files or custom page ranges">
+       <i data-ic="split"></i>
+       <div><b>Split &amp; Extract PDF</b><span>Extract pages or custom ranges</span></div>
+      </button>
+     </div>
+    </div>
+   </div>
+   <div id="ewrap" hidden><canvas id="ecv"></canvas><div id="etl"></div><canvas id="eov"></canvas></div>
+   <div id="e-floating-hud" class="rp-floating-hud" hidden>
+    <button type="button" class="rp-hud-btn" id="eHudFirst" title="First Page (Ctrl+Home)"><i data-ic="pageFirst"></i></button>
+    <button type="button" class="rp-hud-btn" id="eHudPrev" title="Previous Page (PageUp)"><i data-ic="prev"></i></button>
+    <span class="rp-hud-page-pill" id="eHudPageLabel" title="Click to Go to Page (Ctrl+G)">Page 1 / 1</span>
+    <button type="button" class="rp-hud-btn" id="eHudNext" title="Next Page (PageDown)"><i data-ic="next"></i></button>
+    <button type="button" class="rp-hud-btn" id="eHudLast" title="Last Page (Ctrl+End)"><i data-ic="pageLast"></i></button>
+    <span class="rp-hud-div"></span>
+    <button type="button" class="rp-hud-btn on" id="eHudSelect" title="Select Tool (V)"><i data-ic="select"></i></button>
+    <button type="button" class="rp-hud-btn" id="eHudHand" title="Pan / Hand Tool (H)"><i data-ic="hand"></i></button>
+    <button type="button" class="rp-hud-btn" id="eHudMeasure" title="Measure Distance (M)"><i data-ic="ruler"></i></button>
+    <span class="rp-hud-div"></span>
+    <button type="button" class="rp-hud-btn" id="eHudZo" title="Zoom Out (Ctrl+-)"><i data-ic="zoomout"></i></button>
+    <select id="eZoomPreset" class="rp-hud-zoom-select" title="Zoom Level Preset">
+     <option value="page">Fit Page</option>
+     <option value="width">Fit Width</option>
+     <option value="0.5">50%</option>
+     <option value="0.75">75%</option>
+     <option value="1" selected>100%</option>
+     <option value="1.25">125%</option>
+     <option value="1.5">150%</option>
+     <option value="2">200%</option>
+     <option value="3">300%</option>
+    </select>
+    <button type="button" class="rp-hud-btn" id="eHudZi" title="Zoom In (Ctrl+=)"><i data-ic="zoomin"></i></button>
+   </div>
+  </div>
+  <aside id="etools" class="rp-collapsed" hidden>
+   <div class="tabs"><button id="tTab" class="on" title="Document Summary"><i data-ic="gear"></i><span>Info</span></button><button id="cTab" title="PDF Review Comments &amp; Replies"><i data-ic="note"></i><span>Comments (0)</span></button></div>
+   <div id="pTools">
+    <div id="eDocInfoCard" class="rp-doc-info-card">
+     <div class="rp-doc-info-head">
+      <i data-ic="info"></i>
+      <div class="rp-doc-info-title"><b id="eInfoName">No Document Loaded</b><span id="eInfoSub">Open or drop a PDF to inspect</span></div>
+     </div>
+     <div class="rp-doc-info-grid">
+      <div><small>Page Size</small><b id="eInfoDim">—</b></div>
+      <div><small>Pages</small><b id="eInfoPages">0</b></div>
+      <div><small>File Size</small><b id="eInfoSize">—</b></div>
+      <div><small>Markups</small><b id="eInfoAnnots">0</b></div>
+     </div>
+    </div>
+   </div>
+   <div id="pComments" hidden>
+    <label class="f wide2">Reviewer <input id="cAuthor" placeholder="Engineer / Reviewer Name"></label>
+    <div class="row" style="gap:12px;margin-bottom:8px">
+     <label class="chk"><input type="checkbox" id="cHide"> Hide resolved</label>
+     <label class="chk"><input type="checkbox" id="cPage"> Current page only</label>
+    </div>
+    <div id="clist"></div>
+    <div class="tiles two"><button class="tile" id="cCsv"><i data-ic="csv"></i><span>Export CSV</span></button><button class="tile" id="cTxt"><i data-ic="textdoc"></i><span>Export Text</span></button><button class="tile wide" id="cClear"><i data-ic="trash"></i><span>Clear All Comments</span></button></div>
+   </div>
+  </aside>
+ </div>
+ <footer><span id="est">Ready</span><span id="esz"></span></footer>
+</div>
+
+<div id="modal" hidden>
+ <div class="card rp-about-card" role="dialog" aria-labelledby="rp-about-heading">
+  <div class="rp-about-head">
+   <img src="build/pdf-editor-logo.png" alt="Redline Pro" class="rp-img">
+   <div class="rp-about-title">
+    <div class="rp-about-title-row">
+     <h2 id="rp-about-heading">Redline Pro PDF Editor</h2>
+     <span class="rp-about-badge">Version 1.0.0 &middot; Enterprise Edition</span>
+    </div>
+    <p class="rp-about-sub">Enterprise PDF Markup, Direct On-Page Typography, Calibrated OSNAP Measurement, E-Sign &amp; Multi-PDF Assembly Application</p>
+    <p class="rp-about-pub"><b>Redline Studio</b> &middot; <a href="https://redline.textportdocx.in" class="rp-ext-link">textportdocx.in</a> &middot; Free for personal and commercial use</p>
+   </div>
+  </div>
+  <div class="rp-about-pills">
+   <span class="rp-about-pill ok">&#10003; 100% Free (Commercial &amp; Personal)</span>
+   <span class="rp-about-pill">&#128274; 100% Offline &amp; Air-Gapped</span>
+   <span class="rp-about-pill">&#128737; Zero Telemetry / No Cloud</span>
+   <span class="rp-about-pill">&#9889; SHA-256 Audit Integrity</span>
+  </div>
+  <p class="n rp-about-lead">Enterprise standalone PDF Editor: direct on-page text typing, in-place PDF text edit, 18+ built-in &amp; custom fonts, freehand pen, smart eraser, revision clouds, callouts, pins, stamps, signatures, redaction, calibrated measurement, and multi-PDF page assembly.</p>
+  <div class="rp-about-grid">
+   <div class="rp-about-item">
+    <h4><i data-ic="tabCompare"></i> A/B Drawing Compare &amp; Registration</h4>
+    <p>150&ndash;600 DPI pixel &amp; vector diffing, Sub-pixel Auto-Align (dx/dy), 0.1&deg; fine rotation, 3-Point Fiducial Snap, 60 FPS Split Curtain, 4x Loupe, LCS Text Diff &amp; Batch Folder Compare.</p>
+   </div>
+   <div class="rp-about-item">
+    <h4><i data-ic="pcbCam"></i> CAM350 &amp; IPC PCB Workbench</h4>
+    <p>Native Gerber RS-274X (apertures, macros, step-and-repeat, dark/clear polarity), Excellon NC Drill &amp; G85 slots, IPC-D-356 Netlist Compare &amp; IPC Class 1/2/3 + HDI DFM/DRC checks.</p>
+   </div>
+   <div class="rp-about-item">
+    <h4><i data-ic="cadDxf"></i> Bi-Directional AutoCAD DXF Studio</h4>
+    <p>Offline R12/R2000 ASCII DXF parser &amp; writer supporting LINE, LWPOLYLINE (with bulge arcs), CIRCLE, ARC, SPLINE, TEXT/MTEXT, BLOCK/INSERT, layer manager &amp; vector primitive diffing.</p>
+   </div>
+   <div class="rp-about-item">
+    <h4><i data-ic="ruler"></i> Precision Measure (OSNAP) &amp; BOM</h4>
+    <p>Calibrated IPC English (mil/in) &amp; Metric (mm/&mu;m) scales, 8px Magnetic OSNAP (endpoints, midpoints, intersections, centers), Point-to-Point, Polyline, Shoelace Area &amp; BOM Tally.</p>
+   </div>
+   <div class="rp-about-item">
+    <h4><i data-ic="pdfStudio"></i> PDF Studio &amp; Engineering Typography</h4>
+    <p>In-place PDF text edit, 18+ built-in fonts + custom .TTF/.OTF loader, ANSI/ISO Revision Clouds, Leader Callouts, crypto SHA-256 stamps, true redaction &amp; multi-document page assembly.</p>
+   </div>
+   <div class="rp-about-item">
+    <h4><i data-ic="report"></i> Executive QA Audit &amp; Sessions</h4>
+    <p>Multi-page Executive Audit PDF reports with QA sign-off blocks, CSV defect schedules, automatic crash recovery &amp; portable .redline project session files.</p>
+   </div>
+  </div>
+  <div class="rp-about-specs">
+   <div><b>Supported Formats</b><span>PDF &middot; AutoCAD DXF (R12/R2000) &middot; Gerber RS-274X (.gbr/.gtl/.gbl/.gko) &middot; Excellon (.drl/.xln) &middot; IPC-D-356 (.ipc/.net) &middot; Session (.redline)</span></div>
+   <div><b>Runtime &amp; Standards</b><span>PDF.js + PDF-Lib Vector Core &middot; 8-Connected Web Worker Diff Engine &middot; 512&times;512 Tile LRU Cache &middot; IPC-2221 / IPC-6012 Compliant</span></div>
+  </div>
+  <div class="rp-about-footer">
+   <div class="rp-about-actions">
+    <button type="button" id="about-website-btn" class="rp-about-btn" title="Open https://redline.textportdocx.in in your default browser"><i data-ic="globe"></i><span>Visit Website (textportdocx.in)</span></button>
+    <button type="button" id="about-updates-btn" class="rp-about-btn" title="Check for Redline Pro updates"><i data-ic="zap"></i><span>Check for Updates...</span></button>
+    <button type="button" id="about-guide-btn" class="rp-about-btn"><i data-ic="book"></i><span>Quick Guide</span></button>
+    <button type="button" id="about-shortcuts-btn" class="rp-about-btn"><i data-ic="keyboard"></i><span>Shortcuts (?)</span></button>
+    <button type="button" id="about-license-btn" class="rp-about-btn"><i data-ic="shield"></i><span>License &amp; EULA</span></button>
+    <button type="button" id="about-copy-btn" class="rp-about-btn" title="Copy version and system diagnostics to clipboard"><i data-ic="copy"></i><span id="about-copy-lbl">Copy Diagnostics</span></button>
+   </div>
+   <button type="button" id="close" class="rp-about-close">Close</button>
+  </div>
+ </div>
+</div>
+<div id="dlg" hidden><form class="card dl" id="dF"><h2 id="dT"></h2><div id="dB"></div><div class="row"><button type="button" id="dC">Cancel</button><button type="submit" id="dO">OK</button></div></form></div>
+<div id="selbar" hidden><button id="sbCopy" title="Copy the selected text"><i data-ic="copy"></i>Copy</button><button id="sbHl"><i data-ic="highlight"></i>Highlight</button><button id="sbUl"><i data-ic="underline"></i>Underline</button><button id="sbSt"><i data-ic="strike"></i>Strikeout</button><button id="sbEd"><i data-ic="edittext"></i>Edit text</button></div>
+<div id="rp-drop-backdrop" class="rp-drop-backdrop" hidden>
+ <div class="rp-drop-container">
+  <div class="rp-drop-header">
+   <i data-ic="sparkle"></i>
+   <h3>Drop PDF Documents or Images into Redline Pro PDF Editor</h3>
+   <p>Drop any PDF file or image anywhere in the window to open or merge directly in the editor</p>
+  </div>
+  <div class="rp-drop-zones">
+   <div class="rp-drop-zone zone-edit" data-dropzone="edit">
+    <i data-ic="pdfStudio"></i>
+    <b>Drop PDF or Image to Open in Redline Pro PDF Editor</b>
+    <span>Markup, Direct Typing, 18+ Fonts, Measurement, E-Sign, Page Assembly &amp; Redaction</span>
+   </div>
+  </div>
+ </div>
+</div>
+<div id="printarea"></div>
+<script src="icons.js"></script><script src="lib/pdf.min.js"></script>
+<script src="lib/pdf.worker.min.js"></script><script src="lib/pdf-lib.min.js"></script><script src="pre.js"></script><script src="dxf_engine.js"></script><script src="cam_engine.js"></script><script src="measure_engine.js"></script><script src="worker_engine.js"></script><script src="ui_ribbon.js"></script><script src="app.js"></script><script src="editor.js"></script><script src="menu.js"></script><script src="extras.js"></script><script src="pro.js"></script>
+</body></html>

@@ -1323,10 +1323,26 @@ function setView(v) {
   }
   document.body.dataset.view = v; $('#view-compare').hidden = v !== 'compare'; $('#view-edit').hidden = v !== 'edit';
   document.querySelectorAll('#modes button').forEach(b => b.classList.toggle('on', b.dataset.v === v));
+  const brandTitle = $('#rp-brand-name') || $('#brand-about b');
+  if (brandTitle) brandTitle.textContent = v === 'edit' ? 'Redline Pro PDF Editor' : 'Redline Pro';
+  const aboutHeading = $('#rp-about-heading');
+  if (aboutHeading) aboutHeading.textContent = v === 'edit' ? 'Redline Pro PDF Editor' : 'Redline Pro';
   if (v === 'compare' && S.cur) setTimeout(fit, 30); if (v === 'edit' && window.editorShown) window.editorShown(); if (window.updateTitle) window.updateTitle();
 }
 window.setView = setView;
-document.querySelectorAll('#modes button').forEach(b => b.onclick = () => setView(b.dataset.v));
+document.querySelectorAll('#modes button').forEach(b => b.onclick = () => {
+  const targetV = b.dataset.v;
+  const appKind = document.body.dataset.app;
+  if (targetV === 'edit' && appKind === 'compare' && window.native && typeof window.native.openPdfEditor === 'function' && !window.native.isTesting) {
+    window.openPdfEditorApp();
+    return;
+  }
+  if (targetV === 'compare' && appKind === 'pdf-editor' && window.native && typeof window.native.openCompareApp === 'function' && !window.native.isTesting) {
+    window.openCompareApp();
+    return;
+  }
+  setView(targetV);
+});
 if (typeof ResizeObserver !== 'undefined' && $('#vp')) {
   let vpLastW = 0, vpLastH = 0;
   new ResizeObserver(entries => {

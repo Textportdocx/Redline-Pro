@@ -1,6 +1,6 @@
-// ===== Menu bar, shortcuts, preferences, help, external open =====
+// ===== Menu bar, shortcuts, preferences, help, external open (Strictly Isolated per Application) =====
 (() => {
-const V = () => document.body.dataset.view, ED = () => V() === 'edit', E = () => RE.E;
+const V = () => document.body.dataset.view, ED = () => V() === 'edit' || document.body.dataset.app === 'pdf-editor', E = () => RE.E;
 const hasDoc = () => ED() ? !!E().bytes : !!(S.A && S.B);
 const recents = () => { try { return JSON.parse(localStorage.getItem('recent') || '[]'); } catch (e) { return []; } };
 async function openRecent(r) {
@@ -11,9 +11,13 @@ async function openRecent(r) {
     if (mem && mem.bytes) f = { name: mem.name || r.name, path: mem.path || r.path || '', bytes: mem.bytes };
   }
   if (!f && /^Sample_/i.test(r.name || '')) {
-    if (/Gerber/i.test(r.name) && window.loadSampleGerber) return window.loadSampleGerber();
-    if (/DXF|Enclosure/i.test(r.name) && window.loadSampleDXF) return window.loadSampleDXF();
-    if (window.loadSampleSchematic) return window.loadSampleSchematic();
+    if (!ED()) {
+      if (/Gerber/i.test(r.name) && window.loadSampleGerber) return window.loadSampleGerber();
+      if (/DXF|Enclosure/i.test(r.name) && window.loadSampleDXF) return window.loadSampleDXF();
+      if (window.loadSampleSchematic) return window.loadSampleSchematic();
+    } else if ($('#rp-edit-sample-btn')) {
+      return $('#rp-edit-sample-btn').click();
+    }
   }
   if (!f) {
     try { localStorage.setItem('recent', JSON.stringify(recents().filter(x => (x.path || x.name) !== (r.path || r.name)))); } catch (e) {}
@@ -23,8 +27,11 @@ async function openRecent(r) {
     return;
   }
   const u = b2u(f.bytes);
+  if (ED()) {
+    RE.openBytes(u, f.name, f.path);
+    return;
+  }
   if (/\.redline$/i.test(f.name) && window.UIRibbon && window.UIRibbon.restoreSessionFromText) {
-    setView('compare');
     await window.UIRibbon.restoreSessionFromText(new TextDecoder().decode(u));
     return;
   }
@@ -32,29 +39,55 @@ async function openRecent(r) {
     await window.openExternalCADOrCAM(u, f.name, f.path, r.slot || null);
     return;
   }
-  if (ED()) RE.openBytes(u, f.name, f.path);
-  else compareLoadBytes(r.slot || (!S.A ? 'A' : 'B'), u, f.name, f.path);
+  compareLoadBytes(r.slot || (!S.A ? 'A' : 'B'), u, f.name, f.path);
 }
 const st2 = t => (ED() ? $('#est') : $('#st')).textContent = t;
-const ensureEd = () => { if (!ED()) setView('edit'); };
-const op = id => () => { ensureEd(); ACT.op(id); };
+const op = id => () => { ACT.op(id); };
 const needEd = () => !ED();
 
 const MENUS = {
-  File: () => [
-    { l: 'Open PDF in Editor...', ic: 'open', k: 'Ctrl+O', a: () => { ensureEd(); ACT.eOpen(); } },
-    { l: 'Open A (Base / Original) in Compare...', ic: 'openA', k: 'Ctrl+O', a: () => { setView('compare'); ACT.openA(); } },
-    { l: 'Open B (Revised / New) in Compare...', ic: 'openB', k: 'Ctrl+Shift+O', a: () => { setView('compare'); ACT.openB(); } },
+  File: () => ED() ? [
+    { l: 'Open PDF Document...', ic: 'open', k: 'Ctrl+O', a: () => ACT.eOpen() },
+    { l: 'New Blank PDF Sheet', ic: 'blank', k: 'Ctrl+Shift+B', a: op('blank') },
+    { l: '⚡ Load 2-Page Sample Schematic PDF', ic: 'zap', a: () => $('#rp-edit-sample-btn') && $('#rp-edit-sample-btn').click() },
+    '-',
+    { l: 'Save', ic: 'save', k: 'Ctrl+S', a: ACT.eSave },
+    { l: 'Save as...', ic: 'saveas', k: 'Ctrl+Shift+S', a: ACT.eSaveAs },
+    '-',
+    { l: 'Export pages as PNG...', ic: 'png', a: op('png') },
+    { l: 'Export text...', ic: 'textdoc', a: op('text') },
+    { l: 'Export comments (CSV)', ic: 'csv', a: () => $('#cCsv').click() },
+    { l: 'Export comments (text)', ic: 'textdoc', a: () => $('#cTxt').click() },
+    '-',
+    { l: 'Print...', ic: 'print', k: 'Ctrl+P', a: op('print') },
+    { l: 'Show file in folder', ic: 'open', a: () => ACT.reveal(), dis: () => !ACT.hasPath() },
+    '-',
+    {
+      l: 'Open Recent',
+      ic: 'recent',
+      sub: [
+        { h: 'Recent PDF Documents (Last 8)' },
+        ...(recents().length
+          ? recents().slice(0, 8).map((r, idx) => ({ l: `${idx + 1}. ${r.name}`, ic: 'open', tip: r.path, a: () => openRecent(r) }))
+          : [{ l: '(No recent documents yet)', dis: () => true }]),
+        '-',
+        { l: 'Clear Recent Documents', ic: 'trash', a: () => { try { localStorage.removeItem('recent'); if (window.__recentMemFiles) window.__recentMemFiles.clear(); } catch (e) {} }, dis: () => !recents().length }
+      ]
+    },
+    ...(recents().length ? recents().slice(0, 8).map(r => ({ l: r.name, ic: 'open', tip: r.path, a: () => openRecent(r) })) : []),
+    '-', { l: 'Exit', ic: 'x', k: 'Alt+F4', a: () => window.native.quit() }
+  ] : [
+    { l: 'Open A (Base / Original) in Compare...', ic: 'openA', k: 'Ctrl+O', a: () => ACT.openA() },
+    { l: 'Open B (Revised / New) in Compare...', ic: 'openB', k: 'Ctrl+Shift+O', a: () => ACT.openB() },
     '-',
     { l: 'Load Sample Drawings...', ic: 'open', a: () => window.promptSampleDrawings && window.promptSampleDrawings() },
     { l: '⚡ Load Sample Schematic (Rev A vs Rev B)', ic: 'open', a: () => window.loadSampleSchematic && window.loadSampleSchematic() },
     { l: '⚡ Load Sample PCB Gerber (Copper + Drill + IPC-D-356)', ic: 'pcbCam', a: () => window.loadSampleGerber && window.loadSampleGerber() },
     '-',
-    { l: 'Save', ic: 'save', k: 'Ctrl+S', a: ACT.eSave, dis: needEd }, { l: 'Save as...', ic: 'saveas', k: 'Ctrl+Shift+S', a: ACT.eSaveAs, dis: needEd },
-    '-',
-    ...(ED() ? [{ l: 'Export pages as PNG...', ic: 'png', a: op('png') }, { l: 'Export text...', ic: 'textdoc', a: op('text') }, { l: 'Export comments (CSV)', ic: 'csv', a: () => $('#cCsv').click() }, { l: 'Export comments (text)', ic: 'textdoc', a: () => $('#cTxt').click() }]
-      : [{ l: 'Export QA Package (.zip)...', ic: 'packageZip', a: () => window.exportQAPackageZip && window.exportQAPackageZip() }, { l: 'Save comparison image (PNG)...', ic: 'png', a: ACT.savePng }, { l: 'Save differences list (CSV)...', ic: 'csv', a: ACT.saveCsv }, { l: 'Comparison report (PDF)...', ic: 'report', a: ACT.report }]),
-    { l: 'Print...', ic: 'print', k: 'Ctrl+P', a: op('print'), dis: needEd }, { l: 'Show file in folder', ic: 'open', a: () => ACT.reveal(), dis: () => !(ED() && ACT.hasPath()) },
+    { l: 'Export QA Package (.zip)...', ic: 'packageZip', a: () => window.exportQAPackageZip && window.exportQAPackageZip() },
+    { l: 'Save comparison image (PNG)...', ic: 'png', a: ACT.savePng },
+    { l: 'Save differences list (CSV)...', ic: 'csv', a: ACT.saveCsv },
+    { l: 'Comparison report (PDF)...', ic: 'report', a: ACT.report },
     '-',
     {
       l: 'Open Recent',
@@ -71,21 +104,42 @@ const MENUS = {
     ...(recents().length ? recents().slice(0, 8).map(r => ({ l: r.name, ic: 'open', tip: r.path, a: () => openRecent(r) })) : []),
     '-', { l: 'Exit', ic: 'x', k: 'Alt+F4', a: () => window.native.quit() }
   ],
-  Edit: () => [
-    { l: 'Undo', ic: 'undo', k: 'Ctrl+Z', a: () => ED() ? ACT.eUndo() : (ACT.cUndo && ACT.cUndo()) }, { l: 'Redo', ic: 'redo', k: 'Ctrl+Y', a: () => ED() ? ACT.eRedo() : (ACT.cRedo && ACT.cRedo()) },
+  Edit: () => ED() ? [
+    { l: 'Undo', ic: 'undo', k: 'Ctrl+Z', a: () => ACT.eUndo() },
+    { l: 'Redo', ic: 'redo', k: 'Ctrl+Y', a: () => ACT.eRedo() },
     '-',
-    { l: 'Select all pages', ic: 'selectall', k: 'Ctrl+A', a: op('selAll'), dis: needEd }, { l: 'Select no pages', a: op('selNone'), dis: needEd }, { l: 'Select odd pages', a: op('selOdd'), dis: needEd }, { l: 'Select even pages', a: op('selEven'), dis: needEd }, { l: 'Invert selection', a: op('selInv'), dis: needEd },
-    { l: 'Delete selected pages', ic: 'trash', k: 'Ctrl+Del', a: op('del'), dis: needEd },
-    '-', { l: 'Clear measurements & markups', ic: 'ruler', a: () => {
-      if (ED()) ACT.clearMeasure();
-      else if ($('#rib-clear-markups')) $('#rib-clear-markups').click();
-    } },
-    '-', { l: 'Preferences...', ic: 'gear', k: 'Ctrl+,', a: prefs }
+    { l: 'Select all pages', ic: 'selectall', k: 'Ctrl+A', a: op('selAll') },
+    { l: 'Select no pages', a: op('selNone') },
+    { l: 'Select odd pages', a: op('selOdd') },
+    { l: 'Select even pages', a: op('selEven') },
+    { l: 'Invert selection', a: op('selInv') },
+    { l: 'Delete selected pages', ic: 'trash', k: 'Ctrl+Del', a: op('del') },
+    '-',
+    { l: 'Clear measurements', ic: 'ruler', a: () => ACT.clearMeasure() },
+    '-',
+    { l: 'Preferences...', ic: 'gear', k: 'Ctrl+,', a: prefs }
+  ] : [
+    { l: 'Undo', ic: 'undo', k: 'Ctrl+Z', a: () => ACT.cUndo && ACT.cUndo() },
+    { l: 'Redo', ic: 'redo', k: 'Ctrl+Y', a: () => ACT.cRedo && ACT.cRedo() },
+    '-',
+    { l: 'Clear measurements & markups', ic: 'ruler', a: () => { if ($('#rib-clear-markups')) $('#rib-clear-markups').click(); } },
+    '-',
+    { l: 'Preferences...', ic: 'gear', k: 'Ctrl+,', a: prefs }
   ],
   View: () => [
-    { l: 'Compare', ck: () => !ED(), a: () => setView('compare'), k: 'Ctrl+1' }, { l: 'Editor', ck: () => ED(), a: () => setView('edit'), k: 'Ctrl+2' },
-    '-',
-    ...(ED() ? [] : [
+    ...(ED() ? [
+      { l: 'Zoom in', ic: 'zoomin', k: 'Ctrl+=', a: () => ACT.eZoomIn() },
+      { l: 'Zoom out', ic: 'zoomout', k: 'Ctrl+-', a: () => ACT.eZoomOut() },
+      { l: 'Fit page', ic: 'fit', k: 'Ctrl+0', a: () => ACT.eFit() },
+      { l: 'Fit width', a: ACT.eFitWidth },
+      { l: 'Actual size (100%)', a: ACT.eActual },
+      '-',
+      { l: 'Night mode (invert page colours)', ic: 'moon', k: 'Ctrl+Shift+N', ck: () => ACT.nightOn(), a: ACT.night },
+      { l: 'Page thumbnails', ck: () => !$('#thumbs').hidden && !$('#thumbs').classList.contains('rp-collapsed'), a: ACT.toggleThumbs },
+      { l: 'Side panel', k: 'Ctrl+B', ck: () => !$('#etools').classList.contains('rp-collapsed'), a: () => ACT.togglePanel() },
+      '-',
+      { l: 'Full screen', k: 'F11', a: () => document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen() }
+    ] : [
       {
         l: 'Comparison Mode',
         ic: 'tabCompare',
@@ -137,21 +191,18 @@ const MENUS = {
           { l: 'Show / Hide Difference Markers', k: 'M', a: () => ACT.toggleMarkers && ACT.toggleMarkers() }
         ]
       },
-      '-'
-    ]),
-    { l: 'Zoom in', ic: 'zoomin', k: 'Ctrl+=', a: () => ED() ? ACT.eZoomIn() : ACT.cZoomIn() }, { l: 'Zoom out', ic: 'zoomout', k: 'Ctrl+-', a: () => ED() ? ACT.eZoomOut() : ACT.cZoomOut() }, { l: 'Fit page', ic: 'fit', k: 'Ctrl+0', a: () => ED() ? ACT.eFit() : ACT.cFit() }, { l: 'Fit width', a: ACT.eFitWidth, dis: needEd }, { l: 'Actual size (100%)', a: ACT.eActual, dis: needEd },
-    '-',
-    { l: 'Night mode (invert page colours)', ic: 'moon', k: 'Ctrl+Shift+N', ck: () => ACT.nightOn(), a: ACT.night, dis: needEd },
-    { l: 'Page thumbnails', ck: () => !$('#thumbs').hidden && !$('#thumbs').classList.contains('rp-collapsed'), a: ACT.toggleThumbs, dis: needEd },
-    { l: 'Side panel', k: 'Ctrl+B', ck: () => ED() ? !$('#etools').classList.contains('rp-collapsed') : !$('#view-compare aside').classList.contains('rp-collapsed'), a: () => {
-      if (ED()) ACT.togglePanel();
-      else {
+      '-',
+      { l: 'Zoom in', ic: 'zoomin', k: 'Ctrl+=', a: () => ACT.cZoomIn() },
+      { l: 'Zoom out', ic: 'zoomout', k: 'Ctrl+-', a: () => ACT.cZoomOut() },
+      { l: 'Fit page', ic: 'fit', k: 'Ctrl+0', a: () => ACT.cFit() },
+      '-',
+      { l: 'Side panel', k: 'Ctrl+B', ck: () => !$('#view-compare aside').classList.contains('rp-collapsed'), a: () => {
         const as = $('#view-compare aside');
         if (as) { as.classList.toggle('rp-collapsed'); window.dispatchEvent(new Event('resize')); }
-      }
-    } },
-    '-',
-    { l: 'Full screen', k: 'F11', a: () => document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen() }
+      } },
+      '-',
+      { l: 'Full screen', k: 'F11', a: () => document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen() }
+    ])
   ],
   Tools: () => ED() ? [
     { h: 'Pages' },
@@ -163,7 +214,6 @@ const MENUS = {
     { l: 'Header and footer...', ic: 'headerFooter', a: op('hf') }, { l: 'Page numbers...', ic: 'pageNums', a: op('nums') }, { l: 'Load custom font (.ttf / .otf / .woff)...', ic: 'fontFile', a: () => RE.loadCustomFontFile && RE.loadCustomFontFile() }, { l: 'Watermark...', ic: 'watermark', a: op('wm') },
     { l: 'Flatten to images...', ic: 'flatten', a: op('flatten') }, { l: 'Properties...', ic: 'info', a: op('meta') }, { l: 'Optimize', ic: 'zap', a: op('opt') },
     '-', { l: 'Edit text', ic: 'edittext', k: 'E', a: ACT.editText }, { l: 'Find in document...', ic: 'search', k: 'Ctrl+F', a: ACT.find }, { l: 'Measure distance', ic: 'ruler', k: 'M', a: ACT.measure }, { l: 'Go to page...', k: 'Ctrl+G', a: () => ACT.eGotoDialog() },
-    '-', { l: 'Send to Compare as A', ic: 'sendA', a: op('toA') }, { l: 'Send to Compare as B', ic: 'sendB', a: op('toB') },
     '-', { h: 'Tabs' }, { l: 'Next tab', k: 'Ctrl+Tab', a: () => window.TABS.step(1) }, { l: 'Close tab', k: 'Ctrl+W', a: () => window.TABS.closeCur() }
   ] : [
     { l: 'Auto-align B to A', ic: 'align', k: 'A', a: ACT.align, dis: () => !S.cur }, { l: 'Swap A and B', ic: 'swap', k: 'S', a: ACT.swap }, { l: 'Go to page...', k: 'Ctrl+G', a: () => ACT.cGotoDialog() },
@@ -187,10 +237,12 @@ const MENUS = {
     { l: 'Load Session (.redline)...', ic: 'sessionLoad', a: () => window.UIRibbon && window.UIRibbon.loadSessionFile() }
   ],
   Settings: () => [
-    { h: 'IPC & CAM Measurement Units' },
-    { l: 'IPC English (mils / inches)', ck: () => window.CAMState && window.CAMState.unitSystem === 'english', k: 'U', a: () => window.setUnitSystem && window.setUnitSystem('english') },
-    { l: 'IPC Metric (mm / microns)', ck: () => window.CAMState && window.CAMState.unitSystem === 'metric', a: () => window.setUnitSystem && window.setUnitSystem('metric') },
-    '-',
+    ...(ED() ? [] : [
+      { h: 'IPC & CAM Measurement Units' },
+      { l: 'IPC English (mils / inches)', ck: () => window.CAMState && window.CAMState.unitSystem === 'english', k: 'U', a: () => window.setUnitSystem && window.setUnitSystem('english') },
+      { l: 'IPC Metric (mm / microns)', ck: () => window.CAMState && window.CAMState.unitSystem === 'metric', a: () => window.setUnitSystem && window.setUnitSystem('metric') },
+      '-'
+    ]),
     { h: 'Appearance' },
     { l: 'Dark theme', ic: 'moon', ck: () => document.documentElement.dataset.theme === 'dark', a: () => window.setTheme('dark') },
     { l: 'Light theme', ic: 'sun', ck: () => document.documentElement.dataset.theme === 'light', a: () => window.setTheme('light') },
@@ -207,16 +259,20 @@ const MENUS = {
     { l: 'Quick guide', ic: 'book', a: guide },
     { l: 'Keyboard Shortcuts', ic: 'keyboard', k: '?', a: () => window.showKeyboardHUD ? window.showKeyboardHUD() : shortcuts() },
     '-',
-    { l: 'Load Sample Drawings...', ic: 'open', a: () => window.promptSampleDrawings && window.promptSampleDrawings() },
-    { l: '⚡ Load Sample Schematic (Rev A vs Rev B)', ic: 'open', a: () => window.loadSampleSchematic && window.loadSampleSchematic() },
-    { l: '⚡ Load Sample PCB Gerber (Copper + Drill + IPC-D-356)', ic: 'pcbCam', a: () => window.loadSampleGerber && window.loadSampleGerber() },
+    ...(ED() ? [
+      { l: '⚡ Load 2-Page Sample Schematic PDF', ic: 'zap', a: () => $('#rp-edit-sample-btn') && $('#rp-edit-sample-btn').click() }
+    ] : [
+      { l: 'Load Sample Drawings...', ic: 'open', a: () => window.promptSampleDrawings && window.promptSampleDrawings() },
+      { l: '⚡ Load Sample Schematic (Rev A vs Rev B)', ic: 'open', a: () => window.loadSampleSchematic && window.loadSampleSchematic() },
+      { l: '⚡ Load Sample PCB Gerber (Copper + Drill + IPC-D-356)', ic: 'pcbCam', a: () => window.loadSampleGerber && window.loadSampleGerber() }
+    ]),
     '-',
     { l: 'Visit Website (textportdocx.in)', ic: 'globe', a: () => window.openExternalUrl && window.openExternalUrl('https://redline.textportdocx.in') },
     { l: 'Check for Updates...', ic: 'zap', a: () => window.checkForUpdates ? window.checkForUpdates() : (window.openExternalUrl && window.openExternalUrl('https://redline.textportdocx.in')) },
     '-',
     { l: 'Help centre', ic: 'help', a: () => window.rpHelp() },
     { l: 'License', ic: 'shield', a: () => window.showTerms(true) },
-    { l: 'About Redline Pro', ic: 'info', a: () => $('#modal').hidden = false }
+    { l: ED() ? 'About Redline Pro PDF Editor' : 'About Redline Pro', ic: 'info', a: () => $('#modal').hidden = false }
   ]
 };
 
@@ -270,43 +326,59 @@ document.addEventListener('click', () => closeMenu()); addEventListener('blur', 
 async function prefs() {
   const P = window.PREF;
   const curUnits = (window.CAMState && window.CAMState.unitSystem) || 'english';
-  const r = await dialog('Preferences', [
+  const fields = ED() ? [
+    { id: 'author', label: 'Your name (for comments & stamps)', value: (() => { try { return localStorage.getItem('author') || ''; } catch (e) { return ''; } })() },
+    { type: 'checkbox', id: 'confirmSave', label: 'Ask before saving over the original file', value: P.confirmSave }
+  ] : [
     { type: 'select', id: 'unitSystem', label: 'IPC / CAM Measurement Units', value: curUnits, options: [{ label: 'IPC English (mils / inches)', value: 'english' }, { label: 'IPC Metric (mm / microns)', value: 'metric' }] },
     { type: 'select', id: 'dpi', label: 'Compare quality', value: String(P.dpi), options: [{ label: '150 dpi (fast)', value: '150' }, { label: '200 dpi', value: '200' }, { label: '300 dpi (default)', value: '300' }, { label: '400 dpi', value: '400' }, { label: '600 dpi', value: '600' }] },
     { type: 'number', id: 'tol', label: 'Compare tolerance (0-150)', value: P.tol, min: 0, max: 150 }, { type: 'number', id: 'edge', label: 'Edge tolerance (px)', value: P.edge, min: 0, max: 4 }, { type: 'number', id: 'minpx', label: 'Minimum size (px)', value: P.minpx, min: 1, max: 50 },
     { type: 'number', id: 'scanMax', label: 'Scan every page automatically up to', value: P.scanMax, min: 1, max: 500 },
-    { type: 'select', id: 'startView', label: 'Open on start', value: P.startView, options: [{ label: 'Compare', value: 'compare' }, { label: 'Editor', value: 'edit' }] },
-    { id: 'author', label: 'Your name (for comments)', value: (() => { try { return localStorage.getItem('author') || ''; } catch (e) { return ''; } })() },
-    { type: 'checkbox', id: 'confirmSave', label: 'Ask before saving over the original file', value: P.confirmSave },
+    { id: 'author', label: 'Your name (for audit reports)', value: (() => { try { return localStorage.getItem('author') || ''; } catch (e) { return ''; } })() },
     { type: 'note', label: 'Quality and tolerance changes apply the next time pages are compared.' }
-  ], 'Save');
+  ];
+  const r = await dialog('Preferences', fields, 'Save');
   if (!r) return;
   if (r.unitSystem && window.setUnitSystem) window.setUnitSystem(r.unitSystem, true);
-  Object.assign(P, { dpi: +r.dpi, tol: r.tol, edge: r.edge, minpx: r.minpx, scanMax: r.scanMax, startView: r.startView, confirmSave: r.confirmSave }); savePrefs();
-  $('#dpi').value = String(P.dpi); $('#tol').value = P.tol; $('#edge').value = P.edge; $('#minpx').value = P.minpx;
-  if ($('#rib-dpi')) $('#rib-dpi').value = String(P.dpi);
-  if ($('#rib-view-dpi')) $('#rib-view-dpi').value = String(P.dpi);
-  if ($('#rp-diff-thresh')) $('#rp-diff-thresh').value = P.tol;
-  if ($('#rp-tol-val')) $('#rp-tol-val').textContent = P.tol;
-  if ($('#rp-noise-thresh')) $('#rp-noise-thresh').value = P.minpx;
-  if ($('#rp-noise-val')) $('#rp-noise-val').textContent = P.minpx;
-  if ($('#rp-edge-thresh')) $('#rp-edge-thresh').value = P.edge;
-  if ($('#rp-edge-val')) $('#rp-edge-val').textContent = P.edge;
-  try { localStorage.setItem('author', r.author.trim()); } catch (e) {} const a = $('#cAuthor'); if (a) a.value = r.author.trim();
-  $('#dpi').dispatchEvent(new Event('change'));
+  if (!ED()) {
+    Object.assign(P, { dpi: +r.dpi, tol: r.tol, edge: r.edge, minpx: r.minpx, scanMax: r.scanMax });
+    $('#dpi').value = String(P.dpi); $('#tol').value = P.tol; $('#edge').value = P.edge; $('#minpx').value = P.minpx;
+    if ($('#rib-dpi')) $('#rib-dpi').value = String(P.dpi);
+    if ($('#rib-view-dpi')) $('#rib-view-dpi').value = String(P.dpi);
+    if ($('#rp-diff-thresh')) $('#rp-diff-thresh').value = P.tol;
+    if ($('#rp-tol-val')) $('#rp-tol-val').textContent = P.tol;
+    if ($('#rp-noise-thresh')) $('#rp-noise-thresh').value = P.minpx;
+    if ($('#rp-noise-val')) $('#rp-noise-val').textContent = P.minpx;
+    if ($('#rp-edge-thresh')) $('#rp-edge-thresh').value = P.edge;
+    if ($('#rp-edge-val')) $('#rp-edge-val').textContent = P.edge;
+    $('#dpi').dispatchEvent(new Event('change'));
+  } else {
+    Object.assign(P, { confirmSave: r.confirmSave });
+  }
+  savePrefs();
+  if (r.author != null) {
+    try { localStorage.setItem('author', r.author.trim()); } catch (e) {}
+    const a = $('#cAuthor'); if (a) a.value = r.author.trim();
+  }
 }
 ACT.prefs = prefs;
 
 // ----- help -----
 const pretty = k => k.split('+').map(p => ({ ctrl: 'Ctrl', shift: 'Shift', alt: 'Alt', pageup: 'Page Up', pagedown: 'Page Down', delete: 'Delete', escape: 'Esc', space: 'Space', backspace: 'Backspace', home: 'Home', end: 'End' }[p] || (p.length === 1 ? p.toUpperCase() : p.toUpperCase()))).join('+');
 function shortcuts() {
-  if (window.showKeyboardHUD) return window.showKeyboardHUD();
-  const groups = {}; KEYS.forEach(([k, scope, , g, d]) => { const t = (scope === 'all' ? 'Everywhere' : scope === 'edit' ? 'Editor' : 'Compare') + ' - ' + g; (groups[t] = groups[t] || []).push([k, d]); });
+  if (window.showKeyboardHUD && !ED()) return window.showKeyboardHUD();
+  const groups = {};
+  KEYS.filter(([, scope]) => scope === 'all' || (scope === 'edit') === ED()).forEach(([k, , , g, d]) => {
+    (groups[g] = groups[g] || []).push([k, d]);
+  });
   const html = Object.keys(groups).map(t => `<div class="mh">${t}</div><div class="sh">` + groups[t].map(([k, d]) => `<b>${pretty(k)}</b><span>${d}</span>`).join('') + '</div>').join('');
   dialog('Keyboard shortcuts', [{ type: 'html', label: html }], 'Close');
 }
 function guide() {
-  dialog('Quick guide', [{ type: 'html', label: '<div class="mh">Compare Drawings & PCB CAM (CAM350 / IPC)</div><div class="nt">1. File → Open A and Open B (or drop PDFs, Gerber RS-274X, Excellon Drill, IPC-D-356, or DXF files on the window).\n2. Switch between IPC English (mils/in) and Metric (mm/µm) anytime using the Units dropdown or pressing U.\n3. Open the CAD & CAM tab for CAM350 Workbench: D-Code Aperture Table, T-Code Drill Schedule, IPC-D-356 Netlist Inspector, Outline/Skeleton Render Modes, Mirror Bottom Layer, and IPC Class 1/2/3 DFM Clearance Scans.\n4. Export a PNG, a list (CSV), AutoCAD .dxf, or an Executive Audit Report (PDF).</div><div class="mh">Edit and comment on PDFs</div><div class="nt">Open a PDF in the Editor. Draw tools are fixed into the page when you save. Comment tools (Note, Highlight, Underline, Strikeout) stay in the PDF as real comments; the Comments tab lists them, with reply, resolve and export.\nPage tools are on the right: rotate, delete, reorder (drag thumbnails), crop, merge, split, header and footer, watermark and more.</div>' }], 'Close');
+  const html = ED()
+    ? '<div class="mh">Redline Pro PDF Editor</div><div class="nt">1. Open or drop any PDF document or image.\n2. Type directly on the page with Type Text (T) or edit existing PDF text in-place (E) with 18+ built-in & custom .TTF/.OTF fonts.\n3. Use Pen (P), Smart Eraser (Z), Shapes, Revision Clouds (C), Leader Callouts (D), Inspection Pins (Q), Stamps (S), Signatures (G), and Redaction (X).\n4. Use Page Layout and Document tabs to rotate, reorder, crop, resize, merge, split, watermark, add Bates numbering, and export.</div>'
+    : '<div class="mh">Compare Drawings & PCB CAM (CAM350 / IPC)</div><div class="nt">1. File → Open A and Open B (or drop PDFs, Gerber RS-274X, Excellon Drill, IPC-D-356, or DXF files on the window).\n2. Switch between IPC English (mils/in) and Metric (mm/µm) anytime using the Units dropdown or pressing U.\n3. Open the CAD & CAM tab for CAM350 Workbench: D-Code Aperture Table, T-Code Drill Schedule, IPC-D-356 Netlist Inspector, Outline/Skeleton Render Modes, Mirror Bottom Layer, and IPC Class 1/2/3 DFM Clearance Scans.\n4. Export a PNG, a list (CSV), AutoCAD .dxf, or an Executive Audit Report (PDF).</div>';
+  dialog('Quick guide', [{ type: 'html', label: html }], 'Close');
 }
 
 // ----- title, external open, start -----
@@ -316,7 +388,7 @@ window.updateTitle = () => {
     const e = E();
     const hasEdFile = !!(e && e.bytes && e.name);
     d = hasEdFile ? e.name + (window.isDirty() ? '  \u2022 unsaved' : '') : '';
-    t = (hasEdFile ? e.name + (window.isDirty() ? ' *' : '') + ' - ' : '') + 'Redline Pro';
+    t = (hasEdFile ? e.name + (window.isDirty() ? ' *' : '') + ' - ' : '') + 'Redline Pro PDF Editor';
   } else {
     d = (S.A && S.B) ? (S.names.A || 'Rev A') + '  vs  ' + (S.names.B || 'Rev B')
       : S.A ? 'Base (A): ' + (S.names.A || 'Loaded')
@@ -327,12 +399,28 @@ window.updateTitle = () => {
   document.title = t; $('#docname').textContent = d;
 };
 setInterval(window.updateTitle, 1200);
-window.openExternal = ({ name, path, b64, slot }) => { const bin = atob(b64), u = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i); if (/\.redline$/i.test(name) && window.UIRibbon && window.UIRibbon.restoreSessionFromText) { setView('compare'); window.UIRibbon.restoreSessionFromText(new TextDecoder().decode(u)); return; } if (/\.(dxf|gbr|ger|art|top|bot|gtl|gbl|gbs|gts|gto|gbo|gtp|gbp|gko|gm1|drl|xln|ipc|d356|net)$/i.test(name) && window.openExternalCADOrCAM) { window.openExternalCADOrCAM(u, name, path, slot); return; } if (slot) { setView('compare'); compareLoadBytes(slot, u, name, path); return; } setView('edit'); RE.openBytes(u, name, path); };
+window.openExternal = ({ name, path, b64, slot }) => {
+  const bin = atob(b64), u = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i);
+  if (ED()) {
+    RE.openBytes(u, name, path);
+    return;
+  }
+  if (/\.redline$/i.test(name) && window.UIRibbon && window.UIRibbon.restoreSessionFromText) {
+    window.UIRibbon.restoreSessionFromText(new TextDecoder().decode(u));
+    return;
+  }
+  if (/\.(dxf|gbr|ger|art|top|bot|gtl|gbl|gbs|gts|gto|gbo|gtp|gbp|gko|gm1|drl|xln|ipc|d356|net)$/i.test(name) && window.openExternalCADOrCAM) {
+    window.openExternalCADOrCAM(u, name, path, slot);
+    return;
+  }
+  compareLoadBytes(slot || (!S.A ? 'A' : 'B'), u, name, path);
+};
 
-// ----- shortcuts -----
+// ----- shortcuts (Strictly Isolated per Application — no cross-app view switching) -----
 const KEYS = [
-  ['ctrl+1', 'all', () => setView('compare'), 'View', 'Compare view'], ['ctrl+2', 'all', () => setView('edit'), 'View', 'Editor view'],
-  ['ctrl+o', 'all', () => ED() ? ACT.eOpen() : ACT.openA(), 'File', 'Open PDF (Compare: open A)'], ['ctrl+shift+o', 'all', () => { setView('compare'); ACT.openB(); }, 'File', 'Open B in Compare'],
+  ['ctrl+o', 'all', () => ED() ? ACT.eOpen() : ACT.openA(), 'File', 'Open PDF'],
+  ['ctrl+shift+o', 'compare', () => ACT.openB(), 'File', 'Open B in Compare'],
   ['ctrl+,', 'all', () => ACT.prefs(), 'General', 'Preferences'], ['f1', 'all', () => shortcuts(), 'General', 'Keyboard shortcuts'], ['?', 'all', () => shortcuts(), 'General', 'Keyboard shortcuts'],
   ['f11', 'all', () => document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen(), 'General', 'Full screen'], ['ctrl+shift+d', 'all', () => window.setTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark'), 'General', 'Light / dark theme'],
   ['ctrl+0', 'all', () => ED() ? ACT.eFit() : ACT.cFit(), 'Zoom', 'Fit page'], ['ctrl+9', 'all', () => ED() ? ACT.eFitWidth() : ACT.cFit(), 'Zoom', 'Fit width'], ['ctrl+shift+0', 'edit', () => ACT.eActual(), 'Zoom', 'Actual size (100%)'],
@@ -393,8 +481,9 @@ $('#close').onclick = () => $('#modal').hidden = true; $('#modal').onclick = e =
 if ($('#about-btn')) $('#about-btn').onclick = () => { $('#modal').hidden = false; };
 if ($('#brand-about')) $('#brand-about').onclick = () => { $('#modal').hidden = false; };
 window.checkForUpdates = async () => {
-  const r = await dialog('Check for Updates — Redline Pro', [
-    { type: 'html', label: '<div style="display:flex;flex-direction:column;gap:8px"><div><b>Installed Version:</b> Redline Pro 1.0.0 (Enterprise Engineering Edition)</div><div><b>Publisher:</b> Redline Studio &middot; <a href="https://redline.textportdocx.in" class="rp-ext-link">https://redline.textportdocx.in</a></div><div style="color:var(--mute);font-size:12px">Redline Pro runs 100% offline with zero background network calls. Click below to open the official release page in your default browser to check for new versions.</div></div>' }
+  const appName = ED() ? 'Redline Pro PDF Editor' : 'Redline Pro';
+  const r = await dialog('Check for Updates — ' + appName, [
+    { type: 'html', label: '<div style="display:flex;flex-direction:column;gap:8px"><div><b>Installed Version:</b> ' + appName + ' 1.0.0 (Enterprise Edition)</div><div><b>Publisher:</b> Redline Studio &middot; <a href="https://redline.textportdocx.in" class="rp-ext-link">https://redline.textportdocx.in</a></div><div style="color:var(--mute);font-size:12px">' + appName + ' runs 100% offline with zero background network calls. Click below to open the official release page in your default browser to check for new versions.</div></div>' }
   ], 'Visit redline.textportdocx.in');
   if (r && window.openExternalUrl) window.openExternalUrl('https://redline.textportdocx.in');
 };
@@ -404,11 +493,12 @@ if ($('#about-guide-btn')) $('#about-guide-btn').onclick = () => { $('#modal').h
 if ($('#about-shortcuts-btn')) $('#about-shortcuts-btn').onclick = () => { $('#modal').hidden = true; shortcuts(); };
 if ($('#about-license-btn')) $('#about-license-btn').onclick = () => { $('#modal').hidden = true; if (window.showTerms) window.showTerms(true); };
 if ($('#about-copy-btn')) $('#about-copy-btn').onclick = async () => {
+  const appName = ED() ? 'Redline Pro PDF Editor' : 'Redline Pro';
   const units = (window.CAMState && window.CAMState.unitSystem === 'metric') ? 'IPC Metric (mm/µm)' : 'IPC English (mil/in)';
   const theme = document.documentElement.dataset.theme || 'dark';
   const dpi = ($('#dpi') && $('#dpi').value) || '300';
   const info = [
-    'Redline Pro — Version 1.0.0 (Enterprise Engineering Edition)',
+    appName + ' — Version 1.0.0 (Enterprise Edition)',
     'Publisher: Redline Studio · textportdocx.in',
     'License: 100% Free for Personal & Commercial Use (100% Offline / Zero Telemetry)',
     'Engines: PDF.js + PDF-Lib Vector Core · AutoCAD DXF R12/R2000 · CAM350 Gerber RS-274X / Excellon / IPC-D-356 · OSNAP Measure',
@@ -422,5 +512,11 @@ const TIP = { 'pin': 'Pin Marker Badge', 'eraser': 'Eraser (Z)', 'select': 'Sele
 document.querySelectorAll('[data-t]').forEach(b => { if (!b.title && TIP[b.dataset.t]) b.title = TIP[b.dataset.t]; });
 const BT = { eSave: 'Save (Ctrl+S)', eSaveAs: 'Save as (Ctrl+Shift+S)', eUndo: 'Undo (Ctrl+Z)', eRedo: 'Redo (Ctrl+Y)', eFind: 'Find (Ctrl+F)', eOpen: 'Open (Ctrl+O)', openA: 'Open A (Ctrl+O)', openB: 'Open B (Ctrl+Shift+O)', align: 'Auto-align (A)', swap: 'Swap A and B (S)', ignBtn: 'Draw an ignore area (I). Right-click an area to delete it', report: 'Comparison report (Ctrl+Shift+E)', png: 'Save image (Ctrl+E)', csv: 'Differences list (Ctrl+Shift+C)', prevD: 'Previous difference (P)', nextD: 'Next difference (N)', eFit: 'Fit page (Ctrl+0)', eZi: 'Zoom in (Ctrl +)', eZo: 'Zoom out (Ctrl -)' };
 Object.keys(BT).forEach(id => { const el = document.getElementById(id); if (el) el.title = BT[id]; });
-hydrateIcons(); if (PREF.startView === 'edit') setView('edit'); window.updateTitle();
+hydrateIcons();
+if (document.body.dataset.app === 'pdf-editor' || /[?&](app=pdf-editor|view=edit)/i.test(location.search || '')) {
+  setView('edit');
+} else {
+  setView('compare');
+}
+window.updateTitle();
 })();
